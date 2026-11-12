@@ -1194,7 +1194,6 @@ function renderizarTelaFinal() {
         <textarea class="field field-mono" rows="3" readonly id="codigo-final-inline">${escaparHtml(codigo)}</textarea>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button type="button" class="btn btn-primary" id="btn-copiar-final">Copiar Código SNC1.</button>
-          <a class="btn btn-secondary" href="../placar/index.html" target="_blank">Abrir Placar do Professor</a>
         </div>
       </div>
 
