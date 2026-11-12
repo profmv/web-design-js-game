@@ -2,11 +2,12 @@
  * autor: Prof. Marcos V. Moraes
  * proposito: Controlador do Placar Ao Vivo do Professor (valida codigos SNC1. para 8 missoes, calcula pontuacao e exporta CSV)
  * criado: 2026-11-12T16:26:00-03:00
- * atualizado: 2026-11-12T17:30:00-03:00
- * versao: 2.0.0
+ * atualizado: 2026-11-12T19:38:00-03:00
+ * versao: 2.1.0
  */
 
 const TOTAL_MISSOES = 8;
+const MIN_SEGUNDOS_COMPLETO = 60; // Minimum plausible duration (s) for completing all 8 missions
 const PLACAR_STORAGE = "estudio-oito:placar-snc-codigos";
 const $ = (id) => document.getElementById(id);
 
@@ -28,6 +29,10 @@ function escaparHtml(str) {
     .replace(/"/g, "&quot;");
 }
 
+function isNonNegIntArray(arr) {
+  return Array.isArray(arr) && arr.length === TOTAL_MISSOES && arr.every((v) => Number.isInteger(v) && v >= 0);
+}
+
 function decodificarCodigo(codigoBruto) {
   const limpo = codigoBruto.trim();
   if (!limpo.startsWith("SNC1.")) return null;
@@ -39,23 +44,47 @@ function decodificarCodigo(codigoBruto) {
   try {
     const json = decodeURIComponent(escape(atob(b64)));
     const dados = JSON.parse(json);
-    const errosTotal = (dados.erros || []).reduce((a, b) => a + (Number(b) || 0), 0);
-    const dicasTotal = (dados.dicas || []).reduce((a, b) => a + (Number(b) || 0), 0);
-    const concluidas = Number(dados.n) || 0;
-    const basePontos = concluidas * 150 + (concluidas === TOTAL_MISSOES ? 200 : 0);
-    const descontos = errosTotal * 5 + dicasTotal * 10;
-    const pontos = Math.max(concluidas * 80, basePontos - descontos);
+    const okValido =
+      Array.isArray(dados.ok) &&
+      dados.ok.length === TOTAL_MISSOES &&
+      dados.ok.every((v) => v === 0 || v === 1 || typeof v === "boolean");
     const okNorm = Array.from({ length: TOTAL_MISSOES }, (_, i) => (Array.isArray(dados.ok) && dados.ok[i] ? 1 : 0));
+    const concluidas = okNorm.reduce((a, b) => a + b, 0);
+
+    const errosValido = isNonNegIntArray(dados.erros);
+    const dicasValido = isNonNegIntArray(dados.dicas);
+    const sxValido = dados.sx === undefined || isNonNegIntArray(dados.sx);
+    const segValido = Number.isInteger(dados.seg) && dados.seg > 0;
+    const tempoPlausivel = !(concluidas === TOTAL_MISSOES && dados.seg < MIN_SEGUNDOS_COMPLETO);
+    const consistente =
+      okValido &&
+      Number.isInteger(dados.n) &&
+      dados.n === concluidas &&
+      errosValido &&
+      dicasValido &&
+      sxValido &&
+      segValido &&
+      tempoPlausivel;
+
+    const errosTotal = (Array.isArray(dados.erros) ? dados.erros : []).reduce((a, b) => a + (Number(b) || 0), 0);
+    const dicasTotal = (Array.isArray(dados.dicas) ? dados.dicas : []).reduce((a, b) => a + (Number(b) || 0), 0);
+    const sintaxeTotal = (Array.isArray(dados.sx) ? dados.sx : []).reduce((a, b) => a + (Number(b) || 0), 0);
+
+    const basePontos = concluidas * 150 + (concluidas === TOTAL_MISSOES ? 200 : 0);
+    const descontos = errosTotal * 5 + dicasTotal * 10 + sintaxeTotal * 5;
+    const pontos = Math.max(concluidas * 80, basePontos - descontos);
 
     return {
       codigo: limpo,
       seloValido,
+      consistente,
       squad: dados.sq || "Squad",
       membros: Array.isArray(dados.membros) ? dados.membros : [],
       ok: okNorm,
       concluidas,
       erros: errosTotal,
       dicas: dicasTotal,
+      sintaxe: sintaxeTotal,
       segundos: Math.max(1, Number(dados.seg) || 1),
       pontos,
     };
@@ -90,21 +119,35 @@ function formatarTempo(seg) {
 
 let ultimoRanking = [];
 
+function pesoValidade(item) {
+  return item.seloValido && item.consistente ? 1 : 0;
+}
+
 function renderizarPlacar() {
   const avaliados = listaCodigos.map(decodificarCodigo).filter(Boolean);
 
-  // Deduplica pelo nome do squad mantendo o maior progresso
+  // Deduplicate by squad name keeping valid consistent entries above flagged ones, then highest progress
   const porSquad = new Map();
   for (const item of avaliados) {
     const ch = item.squad.toLowerCase();
     const atual = porSquad.get(ch);
-    if (!atual || item.pontos > atual.pontos || item.concluidas > atual.concluidas) {
+    const valItem = pesoValidade(item);
+    const valAtual = atual ? pesoValidade(atual) : -1;
+    if (
+      !atual ||
+      valItem > valAtual ||
+      (valItem === valAtual && (item.pontos > atual.pontos || item.concluidas > atual.concluidas))
+    ) {
       porSquad.set(ch, item);
     }
   }
 
   const ranking = [...porSquad.values()].sort(
-    (a, b) => b.pontos - a.pontos || b.concluidas - a.concluidas || a.segundos - b.segundos
+    (a, b) =>
+      pesoValidade(b) - pesoValidade(a) ||
+      b.pontos - a.pontos ||
+      b.concluidas - a.concluidas ||
+      a.segundos - b.segundos
   );
   ultimoRanking = ranking;
 
@@ -121,9 +164,11 @@ function renderizarPlacar() {
         .join("");
       const statusHtml = !r.seloValido
         ? `<span class="chip chip-bad">[FAIL] Código adulterado</span>`
-        : r.concluidas === TOTAL_MISSOES
-          ? `<span class="chip chip-ok">[OK] ${TOTAL_MISSOES}/${TOTAL_MISSOES} Concluídas</span>`
-          : `<span class="chip chip-select">[EM CURSO] ${r.concluidas}/${TOTAL_MISSOES}</span>`;
+        : !r.consistente
+          ? `<span class="chip chip-bad">[FAIL] Código inconsistente</span>`
+          : r.concluidas === TOTAL_MISSOES
+            ? `<span class="chip chip-ok">[OK] ${TOTAL_MISSOES}/${TOTAL_MISSOES} Concluídas</span>`
+            : `<span class="chip chip-select">[EM CURSO] ${r.concluidas}/${TOTAL_MISSOES}</span>`;
 
       return `
         <tr>
@@ -135,7 +180,7 @@ function renderizarPlacar() {
           <td><div style="white-space:nowrap;">${bolinhas}</div><span style="font-size:12px;">(${r.concluidas}/${TOTAL_MISSOES})</span></td>
           <td><strong style="font-family:var(--ff-mono); font-size:16px;">${r.pontos} pts</strong></td>
           <td style="font-family:var(--ff-mono);">${formatarTempo(r.segundos)}</td>
-          <td style="font-size:12px;">${r.erros} erro(s) / ${r.dicas} dica(s)</td>
+          <td style="font-size:12px;">${r.erros} erro(s) / ${r.dicas} dica(s) / ${r.sintaxe} sintaxe</td>
           <td>${statusHtml}</td>
         </tr>
       `;
@@ -171,9 +216,9 @@ $("btn-toggle-gabarito").addEventListener("click", () => {
 });
 
 $("btn-exportar-csv").addEventListener("click", () => {
-  const linhas = [["posicao", "squad", "integrantes", "fechaduras", "pontos", "tempo_s", "erros", "dicas", "selo_valido"]];
+  const linhas = [["posicao", "squad", "integrantes", "fechaduras", "pontos", "tempo_s", "erros", "dicas", "sintaxe", "selo_valido", "consistente"]];
   ultimoRanking.forEach((r, i) => {
-    linhas.push([i + 1, r.squad, r.membros.join(" / "), r.concluidas, r.pontos, r.segundos, r.erros, r.dicas, r.seloValido ? "SIM" : "NAO"]);
+    linhas.push([i + 1, r.squad, r.membros.join(" / "), r.concluidas, r.pontos, r.segundos, r.erros, r.dicas, r.sintaxe, r.seloValido ? "SIM" : "NAO", r.consistente ? "SIM" : "NAO"]);
   });
   // Runtime Encoding Exception: UTF-8 with BOM required by Excel pt-BR to read accents properly
   const csv = "\uFEFF" + linhas.map((l) => l.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\r\n");

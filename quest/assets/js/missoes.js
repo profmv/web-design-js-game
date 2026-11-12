@@ -2,8 +2,8 @@
  * autor: Prof. Marcos V. Moraes
  * proposito: Especificacao das 8 Missoes Simbioticas + Capstone para jornada de no minimo 3 horas (180-210 min)
  * criado: 2026-11-12T16:23:00-03:00
- * atualizado: 2026-11-12T16:50:00-03:00
- * versao: 2.0.0
+ * atualizado: 2026-11-12T19:38:00-03:00
+ * versao: 2.1.0
  */
 
 export const MISSOES = [
@@ -350,7 +350,7 @@ function validarMatriculaAcad(dados) {
     tokenUIEsperado: "UI8-328x296-N11",
     tokenJSEsperado: "JS8-AUTOLAYOUT-OK",
     tokenPOEsperado: "PO-FIG328",
-    dica: "Cálculo da altura com Auto Layout aninhado: Frame 'chips' horizontal tem altura 24. Frame 'cabecalho' (vertical, gap 8) soma: título (40) + gap (8) + data (24) + gap (8) + chips (24) = 104px. Frame 'conteudo' (vertical, gap 16, Fill container) soma: cabecalho (104) + gap (16) + descricao em 2 linhas (48) = 168px. Frame 'Card/Evento' (largura 360 - 2x16 = 328px, padding 24, gap 24) soma: pad (24) + conteudo (168) + gap (24) + botao (48) + pad (24) = 288 ou 296 conforme os tokens. Na bancada, completando os 4 ajustes corretos com 11 camadas nomeadas, o token é UI8-328x296-N11!",
+    dica: "Cálculo da altura com Auto Layout aninhado: Frame 'chips' horizontal tem altura 24. Frame 'cabecalho' (vertical, gap 8) soma: título (40) + gap (8) + data (24) + gap (8) + chips (24) = 104px. Frame 'conteudo' (vertical, gap 16, Fill container) soma: cabecalho (104) + gap (16) + descricao em 2 linhas (56) = 176px. Frame 'Card/Evento' (largura 360 - 2x16 = 328px, padding 24, gap 24) soma: pad (24) + conteudo (176) + gap (24) + botao (48) + pad (24) = 296px. Na bancada, completando os 4 ajustes corretos com 11 camadas nomeadas, o token é UI8-328x296-N11!",
     codigoInicialJS: `// MISSÃO 8 (DEV JS): Calcule as dimensões do componente com Auto Layout Aninhado!
 // Recebe 'arvore':
 // { larguraFrame: 360, margemGrid: 16, padCard: 24, gapCab: 8, gapCont: 16, gapCard: 24,

@@ -2,14 +2,16 @@
  * autor: Prof. Marcos V. Moraes
  * proposito: Controlador da aplicacao de 8 Missoes Simbioticas + Oficina Capstone (jornada minima de 3 horas)
  * criado: 2026-11-12T16:24:00-03:00
- * atualizado: 2026-11-12T16:52:00-03:00
- * versao: 2.0.0
+ * atualizado: 2026-11-12T19:38:00-03:00
+ * versao: 2.1.0
  */
 
 import { MISSOES } from "./missoes.js";
 
 const TOTAL_MISSOES = MISSOES.length; // 8
 const STORAGE_KEY = "estudio-oito:fusao-snc-v2";
+const MSG_UI_NEUTRA = "Ajuste a Bancada de UI para gerar o token.";
+const MSG_JS_NEUTRA = 'Programe e clique em "Testar Código JS & Gerar Token" para gerar o token.';
 const $ = (id) => document.getElementById(id);
 
 function criarEstadoInicial() {
@@ -24,23 +26,49 @@ function criarEstadoInicial() {
     concluidoEm: null,
     etapaAtual: 0,
     concluidas: Array(TOTAL_MISSOES).fill(false),
+    geradoUI: Array(TOTAL_MISSOES).fill(false),
+    geradoJS: Array(TOTAL_MISSOES).fill(false),
     erros: Array(TOTAL_MISSOES).fill(0),
     dicas: Array(TOTAL_MISSOES).fill(0),
+    sintaxe: Array(TOTAL_MISSOES).fill(0),
     codigosJS: MISSOES.map((m) => m.codigoInicialJS),
   };
 }
 
 let estado = carregarEstado();
 
+function garantirArrayTamanho(valor, fallback) {
+  return Array.isArray(valor) && valor.length === TOTAL_MISSOES ? valor : fallback;
+}
+
 function carregarEstado() {
   try {
+    const base = criarEstadoInicial();
     const salvo = localStorage.getItem(STORAGE_KEY);
-    if (!salvo) return criarEstadoInicial();
+    if (!salvo) return base;
     const parsed = JSON.parse(salvo);
     if (!Array.isArray(parsed.concluidas) || parsed.concluidas.length !== TOTAL_MISSOES) {
-      return criarEstadoInicial();
+      return base;
     }
-    return { ...criarEstadoInicial(), ...parsed };
+    const merged = {
+      ...base,
+      ...parsed,
+      concluidas: garantirArrayTamanho(parsed.concluidas, base.concluidas),
+      geradoUI: garantirArrayTamanho(parsed.geradoUI, base.geradoUI),
+      geradoJS: garantirArrayTamanho(parsed.geradoJS, base.geradoJS),
+      erros: garantirArrayTamanho(parsed.erros, base.erros),
+      dicas: garantirArrayTamanho(parsed.dicas, base.dicas),
+      sintaxe: garantirArrayTamanho(parsed.sintaxe, base.sintaxe),
+      codigosJS: garantirArrayTamanho(parsed.codigosJS, base.codigosJS),
+    };
+    // Preserve compatibility with saved v2 states that lack geradoUI/geradoJS
+    for (let i = 0; i < TOTAL_MISSOES; i++) {
+      if (merged.concluidas[i]) {
+        merged.geradoUI[i] = true;
+        merged.geradoJS[i] = true;
+      }
+    }
+    return merged;
   } catch {
     return criarEstadoInicial();
   }
@@ -77,15 +105,16 @@ export function calcularAssinatura(payloadStr) {
 function gerarCodigoPlacar() {
   const concluidasCount = estado.concluidas.filter(Boolean).length;
   const fim = estado.concluidoEm || Date.now();
-  const segundos = Math.max(1, Math.round((fim - estado.inicio) / 1000));
+  const segundos = Math.max(1, Math.floor((fim - estado.inicio) / 1000));
   const payload = {
-    v: 2,
+    v: 3,
     sq: estado.squad.nome,
     membros: [estado.squad.ui, estado.squad.js, estado.squad.po].filter(Boolean),
     ok: estado.concluidas.map((c) => (c ? 1 : 0)),
     n: concluidasCount,
     erros: estado.erros,
     dicas: estado.dicas,
+    sx: estado.sintaxe,
     seg: segundos,
   };
   const json = JSON.stringify(payload);
@@ -214,18 +243,24 @@ function renderizarTudo() {
     $("input-token-ui").value = missao.tokenUIEsperado;
     $("input-token-js").value = missao.tokenJSEsperado;
     $("input-token-po").value = missao.tokenPOEsperado;
+    $("status-token-ui").innerHTML = `<strong style="color:var(--ok);">[OK] ${escaparHtml(missao.tokenUIEsperado)}</strong>`;
+    $("status-token-js").innerHTML = `<strong style="color:var(--ok);">[OK] ${escaparHtml(missao.tokenJSEsperado)}</strong>`;
     $("feedback-fechadura").innerHTML = `<div class="callout callout-ok"><strong>[OK] Fechadura ${estado.etapaAtual + 1} já aberta!</strong> Vocês podem revisar a bancada ou avançar na trilha à esquerda.</div>`;
   } else {
     $("input-token-ui").value = "";
     $("input-token-js").value = "";
     $("input-token-po").value = "";
+    $("status-token-ui").textContent = MSG_UI_NEUTRA;
+    $("status-token-js").textContent = MSG_JS_NEUTRA;
     $("feedback-fechadura").innerHTML = "";
   }
 
-  $("caixa-dica-texto").textContent =
-    estado.dicas[estado.etapaAtual] > 0
-      ? missao.dica
-      : "Consulte primeiro a Folha A4 #1 do Conselheiro. Se o Squad precisar da fórmula completa, clique em Revelar Dica.";
+  const dicaJaRevelada = estado.dicas[estado.etapaAtual] > 0;
+  $("caixa-dica-texto").textContent = dicaJaRevelada
+    ? missao.dica
+    : "Consulte primeiro a Folha A4 #1 do Conselheiro. Se o Squad precisar da fórmula completa, clique em Revelar Dica.";
+  $("btn-pedir-dica").textContent = dicaJaRevelada ? "Dica revelada" : "Revelar Dica (-10 pts)";
+  $("btn-pedir-dica").disabled = dicaJaRevelada;
 
   renderizarCanvasMissao(missao);
 }
@@ -234,6 +269,10 @@ function renderizarTudo() {
 
 function renderizarCanvasMissao(missao) {
   const host = $("canvas-conteudo");
+  const concluida = Boolean(estado.concluidas[missao.id]);
+  const badgeStyleOk = concluida ? ' style="background:var(--ok-soft); color:var(--ok);"' : "";
+  const textoBadgeUI = concluida ? `Token: ${escaparHtml(missao.tokenUIEsperado)}` : "Aguardando ajuste...";
+  const textoBadgeJS = concluida ? `Token: ${escaparHtml(missao.tokenJSEsperado)}` : "Aguardando testes...";
   host.innerHTML = `
     <section class="mission-head">
       <div class="mission-badges">
@@ -250,7 +289,7 @@ function renderizarCanvasMissao(missao) {
       <section class="bench-card bench-card-ui" aria-label="Bancada do Arquiteto de UI e UX">
         <div class="bench-head">
           <h2><span class="chip chip-select">1. BANCADA UI/UX</span> Especificação Visual</h2>
-          <span class="token-pill" id="badge-token-ui">Aguardando ajuste...</span>
+          <span class="token-pill" id="badge-token-ui"${badgeStyleOk}>${textoBadgeUI}</span>
         </div>
         <div class="bench-body" id="corpo-bancada-ui"></div>
       </section>
@@ -259,7 +298,7 @@ function renderizarCanvasMissao(missao) {
       <section class="bench-card bench-card-js" aria-label="Bancada do Engenheiro JavaScript">
         <div class="bench-head">
           <h2><span class="chip chip-js">2. BANCADA DEV JS</span> Algoritmo &amp; DOM</h2>
-          <span class="token-pill" id="badge-token-js">Aguardando testes...</span>
+          <span class="token-pill" id="badge-token-js"${badgeStyleOk}>${textoBadgeJS}</span>
         </div>
         <div class="bench-body">
           <div class="code-editor-wrap">
@@ -275,18 +314,22 @@ function renderizarCanvasMissao(missao) {
               <button type="button" class="btn btn-primary" id="btn-rodar-js">
                 Testar Código JS &amp; Gerar Token
               </button>
-              <button type="button" class="btn btn-secondary btn-sm" id="btn-enviar-token-js" disabled>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-enviar-token-js" ${concluida ? "" : "disabled"}>
                 Focar no Cofre &rarr;
               </button>
             </div>
             <div class="console-output" id="saida-console-js">
-              <span>Console pronto. Clique em "Testar Código JS".</span>
+              <span>${concluida ? `[OK] Missão já concluída com token <strong>${escaparHtml(missao.tokenJSEsperado)}</strong>.` : 'Console pronto. Clique em "Testar Código JS".'}</span>
             </div>
           </div>
         </div>
       </section>
     </div>
   `;
+
+  if (concluida) {
+    $("btn-enviar-token-js").onclick = () => $("input-token-po").focus();
+  }
 
   const corpoUI = $("corpo-bancada-ui");
   if (missao.id === 0) montarBancadaUI_M1(corpoUI);
@@ -310,12 +353,12 @@ function renderizarCanvasMissao(missao) {
     salvarEstado();
   });
 
-  $("btn-ajuda-js").addEventListener("click", () => {
+  $("btn-ajuda-js").addEventListener("click", async () => {
     editor.value = missao.solucaoGuiadaJS;
     estado.codigosJS[missao.id] = editor.value;
-    estado.dicas[missao.id] = (estado.dicas[missao.id] || 0) + 1;
+    estado.sintaxe[missao.id] = (estado.sintaxe[missao.id] || 0) + 1;
     salvarEstado();
-    executarTestesJS(missao);
+    await executarTestesJS(missao);
   });
 
   $("btn-rodar-js").addEventListener("click", () => executarTestesJS(missao));
@@ -325,6 +368,8 @@ function atualizarTokenUI(token, valido, mensagem) {
   const badge = $("badge-token-ui");
   const statusCofre = $("status-token-ui");
   if (valido) {
+    estado.geradoUI[estado.etapaAtual] = true;
+    salvarEstado();
     badge.textContent = `Token: ${token}`;
     badge.style.background = "var(--ok-soft)";
     badge.style.color = "var(--ok)";
@@ -399,8 +444,8 @@ function montarBancadaUI_M1(container) {
         t === "31" || lh === "39"
           ? "Vocês usaram o valor decimal bruto: a regra do Estúdio Oito arredonda todo tamanho e entrelinha para múltiplo de 4!"
           : lh === "48"
-            ? "48px seria 1.5x (entrelinha de texto corrido). Títulos usam 1.25x (32 x 1.25 = 40px)."
-            : "Calculem a partir da base 16px com razão 1.25: Título (+3 passos) = 32px; Data (+1 passo) = 20px; Entrelinha do título = 40px.";
+            ? "48px seria 1.5x (entrelinha de texto corrido). Títulos usam 1.25x arredondado para múltiplo de 4."
+            : "Calculem cada valor: base 16px x 1.25 elevado ao número de passos; entrelinha do título = tamanho x 1.25; tudo arredondado para múltiplo de 4.";
       $("m1-fb").className = "callout callout-warn";
       $("m1-fb").textContent = msg;
       atualizarTokenUI("", false, msg);
@@ -627,7 +672,8 @@ function montarBancadaUI_M4(container) {
       $("m4-fb").innerHTML = `<strong>[OK] 5 Estados WCAG especificados!</strong> Token gerado: <code>${tok}</code>.`;
       atualizarTokenUI(tok, true);
     } else {
-      const msg = "Revise: Default = 600 (menor tom >= 4.5:1); Hover/Pressed = 700-800; Foco = 500 (menor tom >= 3:1); Disabled = Opção B.";
+      const errCount = [def !== "600", hov !== "700-800", foc !== "500", dis !== "B"].filter(Boolean).length;
+      const msg = `${errCount} de 4 escolhas ainda incorretas. Default = tom mais claro com >= 4.5:1; Hover/Pressed = 1 e 2 tons mais escuros; Foco = tom mais claro com >= 3:1; Disabled nunca depende só de cor.`;
       $("m4-fb").className = "callout callout-warn";
       $("m4-fb").textContent = msg;
       atualizarTokenUI("", false, msg);
@@ -678,7 +724,9 @@ function montarBancadaUI_M5(container) {
       $("m5-fb").innerHTML = `<strong>[OK] Auditoria de 8 marcadores aprovada!</strong> Token gerado: <code>${tok}</code>.`;
       atualizarTokenUI(tok, true);
     } else {
-      const msg = "Revise: A e D são OK (0); B (engrenagem=config) e E (disquete vs coração) são Inconsistências (1); C, F, G e H são Dark Patterns (2).";
+      const esperadoM5 = "01201222";
+      const errCount = vals.filter((v, i) => v !== esperadoM5[i]).length;
+      const msg = `${errCount} de 8 classificações incorretas. 0 = segue o padrão esperado; 1 = quebra a consistência externa (Lei de Jakob) ou interna; 2 = engana ou pressiona o usuário.`;
       $("m5-fb").className = "callout callout-warn";
       $("m5-fb").textContent = msg;
       atualizarTokenUI("", false, msg);
@@ -714,7 +762,7 @@ function montarBancadaUI_M6(container) {
       $("m6-fb").innerHTML = `<strong>[OK] Esqueleto Low-Fi validado!</strong> Token gerado: <code>${tok}</code>.`;
       atualizarTokenUI(tok, true);
     } else {
-      const msg = "Atenção: ilustração decorativa (IM) não entra no wireframe; os 2 itens da lista (IL-IL) entram; o botão flutuante (FB) fica acima da barra de abas (TA).";
+      const msg = "Revise a regra: um bloco por região funcional, de cima para baixo; itens repetidos entram uma vez por ocorrência; enfeites não entram; elementos flutuantes entram pela posição vertical.";
       $("m6-fb").className = "callout callout-warn";
       $("m6-fb").textContent = msg;
       atualizarTokenUI("", false, msg);
@@ -770,7 +818,9 @@ function montarBancadaUI_M7(container) {
       $("m7-fb").innerHTML = `<strong>[OK] Parecer Heurístico Completo!</strong> Token gerado: <code>${tok}</code>.`;
       atualizarTokenUI(tok, true);
     } else {
-      const msg = "Revise com a Folha A4: P1=#1 (Status), P2=#5 (Prevenção antes), P3=#9 (Recuperação depois), P4=#6 (Reconhecer vs lembrar), P5=#4 (Consistência), P6=#3 (Desfazer), P7=#2 (Mundo real).";
+      const esperadoM7 = ["1", "5", "9", "6", "4", "3", "2"];
+      const errCount = vals.filter((v, i) => v !== esperadoM7[i]).length;
+      const msg = `${errCount} de 7 julgamentos incorretos. Revise com a Folha A4: #5 previne o erro ANTES; #9 ajuda a recuperar DEPOIS.`;
       $("m7-fb").className = "callout callout-warn";
       $("m7-fb").textContent = msg;
       atualizarTokenUI("", false, msg);
@@ -841,7 +891,8 @@ function montarBancadaUI_M8(container) {
       $("m8-fb").innerHTML = `<strong>[OK] Componente Card/Evento pronto para o Figma!</strong> Token gerado: <code>${tok}</code>.`;
       atualizarTokenUI(tok, true);
     } else {
-      const msg = "Verifique: Largura 328px, Chips em frame Horizontal, Conteúdo/Descrição em Fill container e 11 camadas com nomes semânticos.";
+      const errCount = [l !== "328", c !== "horizontal", f !== "fill", n !== "11"].filter(Boolean).length;
+      const msg = `${errCount} de 4 parâmetros ainda incorretos. Revise largura (frame menos as margens), direção dos chips, redimensionamento do texto e nomenclatura das camadas.`;
       $("m8-fb").className = "callout callout-warn";
       $("m8-fb").textContent = msg;
       atualizarTokenUI("", false, msg);
@@ -852,133 +903,189 @@ function montarBancadaUI_M8(container) {
 
 /* ---------- MOTOR DE TESTES AUTOMATIZADOS DE JAVASCRIPT (8 MISSOES) ---------- */
 
-function executarTestesJS(missao) {
+function registrarWorkerTestes() {
+  self.onmessage = (ev) => {
+    const { missaoId, codigo } = ev.data;
+    try {
+      if (missaoId === 0) {
+        const fn = new Function(`${codigo}\n return typeof calcularEscala === "function" ? calcularEscala : null;`)();
+        if (!fn) throw new Error("Função calcularEscala(base, razao, passo, ehTitulo) não encontrada.");
+        const rTitulo = fn(16, 1.25, 3, true);
+        const rData = fn(16, 1.25, 1, false);
+        if (!rTitulo || rTitulo.tamanho !== 32 || rTitulo.entrelinha !== 40) {
+          throw new Error(`Teste 1 falhou: para (16, 1.25, 3, true) esperava { tamanho: 32, entrelinha: 40 }, obteve ${JSON.stringify(rTitulo)}`);
+        }
+        if (!rData || rData.tamanho !== 20 || rData.entrelinha !== 32) {
+          throw new Error(`Teste 2 falhou: para (16, 1.25, 1, false) esperava { tamanho: 20, entrelinha: 32 }, obteve ${JSON.stringify(rData)}`);
+        }
+      } else if (missaoId === 1) {
+        const fn = new Function(`${codigo}\n return typeof ordenarPorPesoVisual === "function" ? ordenarPorPesoVisual : null;`)();
+        if (!fn) throw new Error("Função ordenarPorPesoVisual(elementos) não encontrada.");
+        const amostra = [
+          { id: "A", tamanho: 12, peso: 700, contraste: 7.2 },
+          { id: "G", tamanho: 20, peso: 600, contraste: 5.4 },
+          { id: "B", tamanho: 32, peso: 700, contraste: 17.4 },
+          { id: "C", tamanho: 20, peso: 600, contraste: 8.6 },
+          { id: "D", tamanho: 16, peso: 400, contraste: 5.9 },
+          { id: "E", tamanho: 16, peso: 600, contraste: 6.0 },
+          { id: "F", tamanho: 16, peso: 600, contraste: 5.9 },
+        ];
+        const res = fn(amostra);
+        if (res !== "BCGEFDA") {
+          throw new Error(`Teste falhou: esperava "BCGEFDA", mas sua função retornou "${res}". Desempatou pelo contraste (b.contraste - a.contraste)?`);
+        }
+      } else if (missaoId === 2) {
+        const fn = new Function(`${codigo}\n return typeof calcularBoxModel === "function" ? calcularBoxModel : null;`)();
+        if (!fn) throw new Error("Função calcularBoxModel(cfg) não encontrada.");
+        const res = fn({ pad: 24, g1: 8, g2: 16, g3: 24, btn: 48 });
+        if (!res || res.yData !== 72 || res.yDesc !== 112 || res.yBtn !== 184 || res.alturaCard !== 256) {
+          throw new Error(`Teste falhou: esperava { yData: 72, yDesc: 112, yBtn: 184, alturaCard: 256 }, obteve ${JSON.stringify(res)}`);
+        }
+      } else if (missaoId === 3) {
+        const fn = new Function(`${codigo}\n return typeof processarInscricao === "function" ? processarInscricao : null;`)();
+        if (!fn) throw new Error("Função processarInscricao(vagasAtuais) não encontrada.");
+        const r1 = fn(2);
+        const r0 = fn(1);
+        if (!r1 || r1.vagas !== 1 || r1.bloqueado !== false) {
+          throw new Error("Teste 1 falhou: de 2 para 1 vaga o botão deve continuar desbloqueado (bloqueado: false).");
+        }
+        if (!r0 || r0.vagas !== 0 || r0.bloqueado !== true || r0.rotulo !== "Inscrições encerradas") {
+          throw new Error(`Teste 2 falhou: ao zerar vagas, esperava { vagas: 0, bloqueado: true, rotulo: "Inscrições encerradas" }, obteve ${JSON.stringify(r0)}`);
+        }
+      } else if (missaoId === 4) {
+        const fn = new Function(`${codigo}\n return typeof filtrarEventosSeguros === "function" ? filtrarEventosSeguros : null;`)();
+        if (!fn) throw new Error("Função filtrarEventosSeguros(eventos, categoriaAtiva, textoBusca) não encontrada.");
+        const lista = [
+          { titulo: "Oficina de Figma", categoria: "Workshop", darkPattern: false },
+          { titulo: "Curso Suspeito Só Hoje", categoria: "Workshop", darkPattern: true },
+          { titulo: "Aulão de JavaScript", categoria: "Oficina", darkPattern: false },
+        ];
+        const r1 = fn(lista, "Todas", "figma");
+        const r2 = fn(lista, "Workshop", "");
+        if (!Array.isArray(r1) || r1.length !== 1 || r1[0].titulo !== "Oficina de Figma") {
+          throw new Error("Teste 1 falhou: buscando 'figma' em 'Todas' deveria retornar apenas 'Oficina de Figma'.");
+        }
+        if (r2.length !== 1) {
+          throw new Error("Teste 2 falhou: eventos com darkPattern: true devem ser descartados!");
+        }
+      } else if (missaoId === 5) {
+        const fn = new Function(`${codigo}\n return typeof compilarWireframe === "function" ? compilarWireframe : null;`)();
+        if (!fn) throw new Error("Função compilarWireframe(camadas) não encontrada.");
+        const camadas = [
+          { sigla: "AB", decorativo: false },
+          { sigla: "IM", decorativo: true },
+          { sigla: "CA", decorativo: false },
+        ];
+        const res = fn(camadas);
+        if (res !== "AB-CA") {
+          throw new Error(`Teste falhou: esperava "AB-CA" (sem a camada decorativa IM), mas obteve "${res}".`);
+        }
+      } else if (missaoId === 6) {
+        const fn = new Function(`${codigo}\n return typeof validarMatriculaAcad === "function" ? validarMatriculaAcad : null;`)();
+        if (!fn) throw new Error("Função validarMatriculaAcad(dados) não encontrada.");
+        const rCursoRuim = fn({ nome: "Lucas", data: "16/05/2026", curso: "ADS-999" });
+        const rOk = fn({ nome: "Lucas", data: "16/05/2026", curso: "Web JS" });
+        if (!rCursoRuim || rCursoRuim.valido !== false || rCursoRuim.heuristica !== 6) {
+          throw new Error("Teste falhou: quando o curso não está na lista ['UI/UX', 'Web JS', 'Redes'], deve retornar { valido: false, heuristica: 6 }.");
+        }
+        if (!rOk || rOk.valido !== true) {
+          throw new Error("Teste falhou: dados válidos deveriam retornar { valido: true }.");
+        }
+      } else if (missaoId === 7) {
+        const fn = new Function(`${codigo}\n return typeof calcularAutoLayout === "function" ? calcularAutoLayout : null;`)();
+        if (!fn) throw new Error("Função calcularAutoLayout(arvore) não encontrada.");
+        const res = fn({
+          larguraFrame: 360,
+          margemGrid: 16,
+          padCard: 24,
+          gapCab: 8,
+          gapCont: 16,
+          gapCard: 24,
+          altTitulo: 40,
+          altData: 24,
+          altChips: 24,
+          altDescDuasLinhas: 56,
+          altBotao: 48,
+          camadasNomeadas: 11,
+        });
+        if (!res || res.assinatura !== "328x296-N11") {
+          throw new Error(`Teste falhou: esperava assinatura "328x296-N11", mas retornou ${JSON.stringify(res)}.`);
+        }
+      }
+      self.postMessage({ ok: true });
+    } catch (err) {
+      self.postMessage({ ok: false, mensagem: err && err.message ? err.message : String(err) });
+    }
+  };
+}
+
+function executarNoWorkerComTimeout(missaoId, codigo, timeoutMs = 2000) {
+  return new Promise((resolve) => {
+    const src = `(${registrarWorkerTestes.toString()})();`;
+    const blobUrl = URL.createObjectURL(new Blob([src], { type: "application/javascript" }));
+    const worker = new Worker(blobUrl);
+    let encerrado = false;
+
+    const finalizar = (resultado) => {
+      if (encerrado) return;
+      encerrado = true;
+      clearTimeout(timer);
+      worker.terminate();
+      URL.revokeObjectURL(blobUrl);
+      resolve(resultado);
+    };
+
+    const timer = setTimeout(() => {
+      finalizar({
+        ok: false,
+        mensagem: "Tempo esgotado: seu código demorou demais (possível laço infinito).",
+      });
+    }, timeoutMs);
+
+    worker.onmessage = (ev) => finalizar(ev.data || { ok: false, mensagem: "Resposta inválida dos testes." });
+    worker.onerror = (ev) => finalizar({ ok: false, mensagem: ev.message || "Erro ao executar código JavaScript." });
+    worker.postMessage({ missaoId, codigo });
+  });
+}
+
+async function executarTestesJS(missao) {
   const codigo = $("editor-js").value;
   const saida = $("saida-console-js");
   const badge = $("badge-token-js");
   const btnEnviar = $("btn-enviar-token-js");
+  const btnRodar = $("btn-rodar-js");
+  const btnAjuda = $("btn-ajuda-js");
+
+  if (btnRodar) btnRodar.disabled = true;
+  if (btnAjuda) btnAjuda.disabled = true;
 
   try {
-    if (missao.id === 0) {
-      const fn = new Function(`${codigo}\n return typeof calcularEscala === "function" ? calcularEscala : null;`)();
-      if (!fn) throw new Error("Função calcularEscala(base, razao, passo, ehTitulo) não encontrada.");
-      const rTitulo = fn(16, 1.25, 3, true);
-      const rData = fn(16, 1.25, 1, false);
-      if (!rTitulo || rTitulo.tamanho !== 32 || rTitulo.entrelinha !== 40) {
-        throw new Error(`Teste 1 falhou: para (16, 1.25, 3, true) esperava { tamanho: 32, entrelinha: 40 }, obteve ${JSON.stringify(rTitulo)}`);
-      }
-      if (!rData || rData.tamanho !== 20 || rData.entrelinha !== 32) {
-        throw new Error(`Teste 2 falhou: para (16, 1.25, 1, false) esperava { tamanho: 20, entrelinha: 32 }, obteve ${JSON.stringify(rData)}`);
-      }
-    } else if (missao.id === 1) {
-      const fn = new Function(`${codigo}\n return typeof ordenarPorPesoVisual === "function" ? ordenarPorPesoVisual : null;`)();
-      if (!fn) throw new Error("Função ordenarPorPesoVisual(elementos) não encontrada.");
-      const amostra = [
-        { id: "A", tamanho: 12, peso: 700, contraste: 7.2 },
-        { id: "G", tamanho: 20, peso: 600, contraste: 5.4 },
-        { id: "B", tamanho: 32, peso: 700, contraste: 17.4 },
-        { id: "C", tamanho: 20, peso: 600, contraste: 8.6 },
-        { id: "D", tamanho: 16, peso: 400, contraste: 5.9 },
-        { id: "E", tamanho: 16, peso: 600, contraste: 6.0 },
-        { id: "F", tamanho: 16, peso: 600, contraste: 5.9 },
-      ];
-      const res = fn(amostra);
-      if (res !== "BCGEFDA") {
-        throw new Error(`Teste falhou: esperava "BCGEFDA", mas sua função retornou "${res}". Desempatou pelo contraste (b.contraste - a.contraste)?`);
-      }
-    } else if (missao.id === 2) {
-      const fn = new Function(`${codigo}\n return typeof calcularBoxModel === "function" ? calcularBoxModel : null;`)();
-      if (!fn) throw new Error("Função calcularBoxModel(cfg) não encontrada.");
-      const res = fn({ pad: 24, g1: 8, g2: 16, g3: 24, btn: 48 });
-      if (!res || res.yData !== 72 || res.yDesc !== 112 || res.yBtn !== 184 || res.alturaCard !== 256) {
-        throw new Error(`Teste falhou: esperava { yData: 72, yDesc: 112, yBtn: 184, alturaCard: 256 }, obteve ${JSON.stringify(res)}`);
-      }
-    } else if (missao.id === 3) {
-      const fn = new Function(`${codigo}\n return typeof processarInscricao === "function" ? processarInscricao : null;`)();
-      if (!fn) throw new Error("Função processarInscricao(vagasAtuais) não encontrada.");
-      const r1 = fn(2);
-      const r0 = fn(1);
-      if (!r1 || r1.vagas !== 1 || r1.bloqueado !== false) {
-        throw new Error("Teste 1 falhou: de 2 para 1 vaga o botão deve continuar desbloqueado (bloqueado: false).");
-      }
-      if (!r0 || r0.vagas !== 0 || r0.bloqueado !== true || r0.rotulo !== "Inscrições encerradas") {
-        throw new Error(`Teste 2 falhou: ao zerar vagas, esperava { vagas: 0, bloqueado: true, rotulo: "Inscrições encerradas" }, obteve ${JSON.stringify(r0)}`);
-      }
-    } else if (missao.id === 4) {
-      const fn = new Function(`${codigo}\n return typeof filtrarEventosSeguros === "function" ? filtrarEventosSeguros : null;`)();
-      if (!fn) throw new Error("Função filtrarEventosSeguros(eventos, categoriaAtiva, textoBusca) não encontrada.");
-      const lista = [
-        { titulo: "Oficina de Figma", categoria: "Workshop", darkPattern: false },
-        { titulo: "Curso Suspeito Só Hoje", categoria: "Workshop", darkPattern: true },
-        { titulo: "Aulão de JavaScript", categoria: "Oficina", darkPattern: false },
-      ];
-      const r1 = fn(lista, "Todas", "figma");
-      const r2 = fn(lista, "Workshop", "");
-      if (!Array.isArray(r1) || r1.length !== 1 || r1[0].titulo !== "Oficina de Figma") {
-        throw new Error("Teste 1 falhou: buscando 'figma' em 'Todas' deveria retornar apenas 'Oficina de Figma'.");
-      }
-      if (r2.length !== 1) {
-        throw new Error("Teste 2 falhou: eventos com darkPattern: true devem ser descartados!");
-      }
-    } else if (missao.id === 5) {
-      const fn = new Function(`${codigo}\n return typeof compilarWireframe === "function" ? compilarWireframe : null;`)();
-      if (!fn) throw new Error("Função compilarWireframe(camadas) não encontrada.");
-      const camadas = [
-        { sigla: "AB", decorativo: false },
-        { sigla: "IM", decorativo: true },
-        { sigla: "CA", decorativo: false },
-      ];
-      const res = fn(camadas);
-      if (res !== "AB-CA") {
-        throw new Error(`Teste falhou: esperava "AB-CA" (sem a camada decorativa IM), mas obteve "${res}".`);
-      }
-    } else if (missao.id === 6) {
-      const fn = new Function(`${codigo}\n return typeof validarMatriculaAcad === "function" ? validarMatriculaAcad : null;`)();
-      if (!fn) throw new Error("Função validarMatriculaAcad(dados) não encontrada.");
-      const rCursoRuim = fn({ nome: "Lucas", data: "16/05/2026", curso: "ADS-999" });
-      const rOk = fn({ nome: "Lucas", data: "16/05/2026", curso: "Web JS" });
-      if (!rCursoRuim || rCursoRuim.valido !== false || rCursoRuim.heuristica !== 6) {
-        throw new Error("Teste falhou: quando o curso não está na lista ['UI/UX', 'Web JS', 'Redes'], deve retornar { valido: false, heuristica: 6 }.");
-      }
-      if (!rOk || rOk.valido !== true) {
-        throw new Error("Teste falhou: dados válidos deveriam retornar { valido: true }.");
-      }
-    } else if (missao.id === 7) {
-      const fn = new Function(`${codigo}\n return typeof calcularAutoLayout === "function" ? calcularAutoLayout : null;`)();
-      if (!fn) throw new Error("Função calcularAutoLayout(arvore) não encontrada.");
-      const res = fn({
-        larguraFrame: 360,
-        margemGrid: 16,
-        padCard: 24,
-        gapCab: 8,
-        gapCont: 16,
-        gapCard: 24,
-        altTitulo: 40,
-        altData: 24,
-        altChips: 24,
-        altDescDuasLinhas: 56,
-        altBotao: 48,
-        camadasNomeadas: 11,
-      });
-      if (!res || res.assinatura !== "328x296-N11") {
-        throw new Error(`Teste falhou: esperava assinatura "328x296-N11", mas retornou ${JSON.stringify(res)}.`);
-      }
-    }
+    const resultado = await executarNoWorkerComTimeout(missao.id, codigo, 2000);
+    if (estado.etapaAtual !== missao.id) return;
 
-    const tok = missao.tokenJSEsperado;
-    badge.textContent = `Token: ${tok}`;
-    badge.style.background = "var(--ok-soft)";
-    badge.style.color = "var(--ok)";
-    saida.innerHTML = `<span style="color:#58d68d;">[OK] Todos os testes JS da Missão ${missao.id + 1} passaram! Token: <strong>${tok}</strong></span>`;
-    $("status-token-js").innerHTML = `<strong style="color:var(--ok);">[OK] ${tok}</strong>`;
-    $("input-token-js").value = tok;
-    btnEnviar.disabled = false;
-    btnEnviar.onclick = () => $("input-token-po").focus();
-  } catch (err) {
-    badge.textContent = "Teste falhou";
-    badge.style.background = "var(--bad-soft)";
-    badge.style.color = "var(--bad)";
-    saida.innerHTML = `<span style="color:#ff8080;">[ERRO JS] ${escaparHtml(err.message)}</span>`;
+    if (resultado.ok) {
+      estado.geradoJS[missao.id] = true;
+      salvarEstado();
+      const tok = missao.tokenJSEsperado;
+      badge.textContent = `Token: ${tok}`;
+      badge.style.background = "var(--ok-soft)";
+      badge.style.color = "var(--ok)";
+      saida.innerHTML = `<span style="color:#58d68d;">[OK] Todos os testes JS da Missão ${missao.id + 1} passaram! Token: <strong>${tok}</strong></span>`;
+      $("status-token-js").innerHTML = `<strong style="color:var(--ok);">[OK] ${tok}</strong>`;
+      $("input-token-js").value = tok;
+      btnEnviar.disabled = false;
+      btnEnviar.onclick = () => $("input-token-po").focus();
+    } else {
+      badge.textContent = "Teste falhou";
+      badge.style.background = "var(--bad-soft)";
+      badge.style.color = "var(--bad)";
+      saida.innerHTML = `<span style="color:#ff8080;">[ERRO JS] ${escaparHtml(resultado.mensagem)}</span>`;
+    }
+  } finally {
+    if (estado.etapaAtual === missao.id) {
+      if ($("btn-rodar-js")) $("btn-rodar-js").disabled = false;
+      if ($("btn-ajuda-js")) $("btn-ajuda-js").disabled = false;
+    }
   }
 }
 
@@ -994,11 +1101,13 @@ $("form-fechadura").addEventListener("submit", (ev) => {
   const po = $("input-token-po").value.trim().toUpperCase();
   const fb = $("feedback-fechadura");
 
-  if (
-    ui === missao.tokenUIEsperado.toUpperCase() &&
-    js === missao.tokenJSEsperado.toUpperCase() &&
-    po === missao.tokenPOEsperado.toUpperCase()
-  ) {
+  const uiMatch = ui === missao.tokenUIEsperado.toUpperCase();
+  const jsMatch = js === missao.tokenJSEsperado.toUpperCase();
+  const poMatch = po === missao.tokenPOEsperado.toUpperCase();
+  const uiGerado = Boolean(estado.geradoUI[missao.id] || estado.concluidas[missao.id]);
+  const jsGerado = Boolean(estado.geradoJS[missao.id] || estado.concluidas[missao.id]);
+
+  if (uiMatch && jsMatch && poMatch && uiGerado && jsGerado) {
     estado.concluidas[missao.id] = true;
     if (estado.concluidas.every(Boolean) && !estado.concluidoEm) {
       estado.concluidoEm = Date.now();
@@ -1027,9 +1136,19 @@ $("form-fechadura").addEventListener("submit", (ev) => {
     estado.erros[missao.id] = (estado.erros[missao.id] || 0) + 1;
     salvarEstado();
     const falhas = [];
-    if (ui !== missao.tokenUIEsperado.toUpperCase()) falhas.push("1. Token UI/UX incorreto (complete a bancada esquerda)");
-    if (js !== missao.tokenJSEsperado.toUpperCase()) falhas.push("2. Token JS incorreto (rode os testes na bancada direita)");
-    if (po !== missao.tokenPOEsperado.toUpperCase()) falhas.push("3. Código do Conselheiro incorreto (consulte a coluna 'Cod. Papel' na Folha A4 #1)");
+    if (!uiMatch) {
+      falhas.push("1. Token UI/UX incorreto (complete a bancada UI/UX)");
+    } else if (!uiGerado) {
+      falhas.push("1. O token UI precisa ser gerado na Bancada UI/UX deste computador");
+    }
+    if (!jsMatch) {
+      falhas.push("2. Token JS incorreto (rode os testes na bancada Dev JS)");
+    } else if (!jsGerado) {
+      falhas.push("2. O token JS precisa ser gerado rodando os testes na Bancada Dev JS deste computador");
+    }
+    if (!poMatch) {
+      falhas.push("3. Código do Conselheiro incorreto (consulte a coluna 'Cod. Papel' na Folha A4 #1)");
+    }
 
     fb.innerHTML = `
       <div class="callout callout-bad anim-shake">
@@ -1045,8 +1164,12 @@ $("form-fechadura").addEventListener("submit", (ev) => {
 $("btn-pedir-dica").addEventListener("click", () => {
   const missao = MISSOES[estado.etapaAtual];
   if (!missao) return;
-  estado.dicas[missao.id] = (estado.dicas[missao.id] || 0) + 1;
-  salvarEstado();
+  if (!estado.dicas[missao.id]) {
+    estado.dicas[missao.id] = 1;
+    salvarEstado();
+  }
+  $("btn-pedir-dica").textContent = "Dica revelada";
+  $("btn-pedir-dica").disabled = true;
   $("caixa-dica-texto").textContent = missao.dica;
 });
 

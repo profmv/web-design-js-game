@@ -2,8 +2,8 @@
 autor: Prof. Marcos V. Moraes
 proposito: Interface interativa das 8 Fechaduras Simbioticas + Oficina Capstone (Bancada UI/UX + Terminal JavaScript + Validacao do Conselheiro)
 criado: 2026-11-12T16:22:00-03:00
-atualizado: 2026-11-12T17:30:00-03:00
-versao: 2.0.0
+atualizado: 2026-11-12T19:38:00-03:00
+versao: 2.1.0
 -->
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -11,8 +11,8 @@ versao: 2.0.0
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Estúdio Oito — Bancada Simbiótica (UI/UX + JavaScript)</title>
-  <link rel="stylesheet" href="../assets/css/tokens.css">
-  <link rel="stylesheet" href="assets/css/quest.css">
+  <link rel="stylesheet" href="../assets/css/tokens.css?v=2.1.0">
+  <link rel="stylesheet" href="assets/css/quest.css?v=2.1.0">
 </head>
 <body>
   <svg class="sprite" aria-hidden="true" focusable="false">
@@ -41,10 +41,6 @@ versao: 2.0.0
       <svg class="ic ic-16" aria-hidden="true"><use href="#i-timer"/></svg>
       <span id="toolbar-tempo">00:00</span>
     </span>
-    <a class="ws-tool-btn" href="../impressos/prancheta-conselheiro.html" target="_blank">
-      <svg class="ic ic-16" aria-hidden="true"><use href="#i-printer"/></svg>
-      <span>Prancheta #1</span>
-    </a>
     <button type="button" class="ws-tool-btn is-active" id="btn-codigo-placar">
       <svg class="ic ic-16" aria-hidden="true"><use href="#i-award"/></svg>
       <span>Código Placar</span>
@@ -90,11 +86,11 @@ versao: 2.0.0
         <div class="lock-triad">
           <div class="triad-step" style="border-left:3px solid var(--ac-select);">
             <strong>1. Token UI/UX (Arquiteto de Interface)</strong>
-            <span id="status-token-ui">Ajuste a Bancada de UI à esquerda para gerar o token.</span>
+            <span id="status-token-ui">Ajuste a Bancada de UI para gerar o token.</span>
           </div>
           <div class="triad-step" style="border-left:3px solid var(--ac-js);">
             <strong>2. Token JavaScript (Engenheiro Web)</strong>
-            <span id="status-token-js">Programe e clique em "Rodar Testes JS" para gerar o token.</span>
+            <span id="status-token-js">Programe e clique em "Testar Código JS &amp; Gerar Token" para gerar o token.</span>
           </div>
           <div class="triad-step" style="border-left:3px solid var(--ac-po);">
             <strong>3. Código do Conselheiro (Prancheta #1)</strong>
@@ -153,6 +149,6 @@ versao: 2.0.0
     </div>
   </dialog>
 
-  <script type="module" src="assets/js/app.js"></script>
+  <script type="module" src="assets/js/app.js?v=2.1.0"></script>
 </body>
 </html>

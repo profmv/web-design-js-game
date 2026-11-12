@@ -2,8 +2,8 @@
  * autor: Prof. Marcos V. Moraes
  * proposito: Estilos do workspace de missoes simbioticas (quest/index.html) com Bancada UI + Terminal JS
  * criado: 2026-11-12T16:22:00-03:00
- * atualizado: 2026-11-12T16:22:00-03:00
- * versao: 1.0.0
+ * atualizado: 2026-11-12T19:38:00-03:00
+ * versao: 1.1.0
  */
 
 body {
@@ -366,5 +366,22 @@ body {
   }
   .ws-shell {
     grid-template-columns: 1fr;
+  }
+  .canvas-area {
+    order: 1;
+  }
+  .panel-right {
+    order: 2;
+  }
+  .panel-left {
+    order: 3;
+  }
+  .mission-badges .chip {
+    white-space: normal;
+    max-width: 100%;
+    height: auto;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    line-height: 1.3;
   }
 }
