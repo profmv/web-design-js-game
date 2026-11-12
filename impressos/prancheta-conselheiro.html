@@ -2,8 +2,8 @@
 autor: Prof. Marcos V. Moraes
 proposito: Folha A4 #1 imprimivel sem recortes - Prancheta do Product Owner e Conselheiro (8 Missoes UI/UX + JS)
 criado: 2026-11-12T16:21:00-03:00
-atualizado: 2026-11-12T17:30:00-03:00
-versao: 2.0.0
+atualizado: 2026-11-12T19:51:00-03:00
+versao: 2.1.0
 -->
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -61,7 +61,7 @@ versao: 2.0.0
           <thead>
             <tr>
               <th>Missão / Pilar UI</th>
-              <th>Regra Exata (para ditar ao Designer)</th>
+              <th>Regra Conceitual (para orientar o Designer)</th>
               <th>Cód. Papel</th>
             </tr>
           </thead>
@@ -69,56 +69,56 @@ versao: 2.0.0
             <tr>
               <td><strong>M1. Escala Modular</strong></td>
               <td>
-                Base <span class="code-inline">16px</span>, razão <span class="code-inline">1.25</span>, arredondar p/ múlt. de 4. Título (+3) = <span class="code-inline">32px</span> (linha 1.25x = <span class="code-inline">40px</span>). Data (+1) = <span class="code-inline">20px</span>.
+                Multiplique a base pela razão elevada ao número de passos, arredondando para múltiplo de 4. Entrelinha de título usa fator menor que texto corrido (1.25x vs 1.5x).
               </td>
               <td><span class="code-inline">PO-MOD4</span></td>
             </tr>
             <tr>
               <td><strong>M2. Peso Visual</strong></td>
               <td>
-                Ordem de leitura (7 itens): 1º <strong>Tamanho</strong> &gt; 2º <strong>Peso</strong> &gt; 3º <strong>Contraste</strong> &gt; 4º <strong>Posição F/Z</strong> (cor sozinha não manda!).
+                Critério de desempate da leitura (7 itens): 1º <strong>Tamanho</strong> &gt; 2º <strong>Peso</strong> &gt; 3º <strong>Contraste</strong> &gt; 4º <strong>Posição F/Z</strong> (matiz sozinho não vence contraste).
               </td>
               <td><span class="code-inline">PO-PESO7</span></td>
             </tr>
             <tr>
               <td><strong>M3. Ritmo 8px</strong></td>
               <td>
-                Proximidade Gestalt: interno grupo = <span class="code-inline">8px</span> | entre grupos = <span class="code-inline">16px</span> | antes do botão = <span class="code-inline">24px</span> | padding = <span class="code-inline">24px</span> | botão = <span class="code-inline">48px</span>.
+                Proximidade (Gestalt): elementos do mesmo grupo ficam mais próximos entre si do que de blocos vizinhos; aumente o respiro antes da ação principal e garanta área de toque acessível (&ge; 48px).
               </td>
               <td><span class="code-inline">PO-RITMO8</span></td>
             </tr>
             <tr>
               <td><strong>M4. Estados WCAG</strong></td>
               <td>
-                Texto normal &ge; <span class="code-inline">4.5:1</span> (Default <span class="code-inline">600</span>, Hover <span class="code-inline">700</span>, Pressed <span class="code-inline">800</span>). Foco &ge; <span class="code-inline">3:1</span> (tom <span class="code-inline">500</span>). Disabled: <strong>Opção B</strong> (nunca só cor!).
+                WCAG 1.4.3 / 1.4.11: texto normal exige contraste mínimo de <span class="code-inline">4.5:1</span>; indicador de foco exige <span class="code-inline">3:1</span>; estado desabilitado deve comunicar bloqueio por texto/cursor, nunca apenas por cor.
               </td>
               <td><span class="code-inline">PO-WCAG45</span></td>
             </tr>
             <tr>
               <td><strong>M5. Jakob &amp; Dark Patterns</strong></td>
               <td>
-                <strong>Jakob:</strong> Lupa=busca, Funil=filtro (Engrenagem=config), Coração=salvar. <strong>Dark Patterns (2):</strong> falsa urgência, confirmshaming, spam pré-marcado, taxa oculta.
+                Classificação: <strong>0</strong> = segue convenção esperada; <strong>1</strong> = quebra consistência externa (Lei de Jakob) ou interna; <strong>2</strong> = Dark Pattern (pressiona, engana ou pré-marca escolha).
               </td>
               <td><span class="code-inline">PO-JAKOB8</span></td>
             </tr>
             <tr>
               <td><strong>M6. Wireframe Low-Fi</strong></td>
               <td>
-                1 bloco por região funcional de cima p/ baixo; itens repetidos 1x por ocorrência (<span class="code-inline">IL-IL</span>); zero enfeites (<span class="code-inline">IM</span> fora); FAB antes da barra de abas.
+                Estruture de cima para baixo usando um bloco por região funcional, contabilizando ocorrências repetidas na lista e descartando elementos puramente decorativos.
               </td>
               <td><span class="code-inline">PO-WIRE9</span></td>
             </tr>
             <tr>
               <td><strong>M7. Nielsen (10 Heur.)</strong></td>
               <td>
-                Consulte o Tribunal ao lado. Foco crítico: diferenciar <strong>#5 Prevenção</strong> (bloqueia ANTES) de <strong>#9 Recuperação</strong> (explica DEPOIS).
+                Consulte o guia das heurísticas ao lado. Atenção especial à diferença entre prevenir o erro <strong>antes</strong> do envio (#5) e orientar a recuperação <strong>depois</strong> que ele ocorre (#9).
               </td>
               <td><span class="code-inline">PO-NIELSEN10</span></td>
             </tr>
             <tr>
               <td><strong>M8. Auto Layout</strong></td>
               <td>
-                Frame <span class="code-inline">360px</span> - 2x<span class="code-inline">16px</span> = Card <span class="code-inline">328px</span> Fixed. <span class="code-inline">chips</span> horizontal; <span class="code-inline">conteudo/desc</span> = Fill container; 11 camadas semânticas.
+                Largura do componente acompanha o frame descontando as margens laterais; ajuste o fluxo dos marcadores, faça o texto preencher a largura disponível e nomeie camadas por função.
               </td>
               <td><span class="code-inline">PO-FIG328</span></td>
             </tr>
@@ -127,80 +127,80 @@ versao: 2.0.0
       </section>
 
       <section class="box">
-        <h2>[CHAVE DEV JS + NIELSEN] Cola Rápida para o Conselheiro</h2>
+        <h2>[GUIA NIELSEN] Referência Rápida de Usabilidade (M7)</h2>
         <table class="sheet-table">
           <thead>
             <tr>
-              <th>Heurística de Nielsen (M7)</th>
-              <th>Como diferenciar no Tribunal</th>
+              <th>Heurística de Nielsen</th>
+              <th>O que observar na interface</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td><strong>#1 Visibilidade do status</strong></td>
-              <td>Tela parada 20s sem mostrar "Carregando..."</td>
+              <td>O sistema informa em tempo hábil o que está acontecendo (carregamento, envio, progresso).</td>
             </tr>
             <tr>
-              <td><strong>#2 Mundo real (linguagem)</strong></td>
-              <td>Jargão ("vínculo discente") em vez da língua do aluno.</td>
+              <td><strong>#2 Mundo real</strong></td>
+              <td>Usa vocabulário familiar ao público-alvo, evitando termos burocráticos ou técnicos internos.</td>
             </tr>
             <tr>
               <td><strong>#3 Controle e liberdade</strong></td>
-              <td>Apagou sem querer e não existe botão "Desfazer".</td>
+              <td>Oferece saída clara ou opção de desfazer após ações acidentais do usuário.</td>
             </tr>
             <tr>
               <td><strong>#4 Consistência e padrões</strong></td>
-              <td>"Salvar" azul na Tela 1 vira "Gravar" verde na Tela 2.</td>
+              <td>Mantém os mesmos rótulos, cores e significados para ações equivalentes em todo o fluxo.</td>
             </tr>
             <tr>
               <td><strong>#5 Prevenção de erros (ANTES)</strong></td>
-              <td>Deixar digitar data <span class="code-inline">31/02/2026</span> sem travar ANTES.</td>
+              <td>Valida formato e limites antes de permitir que o dado inválido seja submetido.</td>
             </tr>
             <tr>
               <td><strong>#6 Reconhecer vs lembrar</strong></td>
-              <td>Exigir decorar código <span class="code-inline">ADS-204</span> sem mostrar lista.</td>
+              <td>Deixa opções visíveis para escolha em vez de exigir que a pessoa memorize códigos de cabeça.</td>
             </tr>
             <tr>
               <td><strong>#9 Recuperar de erros (DEPOIS)</strong></td>
-              <td>Mensagem técnica <span class="code-inline">Erro 0x80041</span> sem instrução.</td>
+              <td>Explica o problema em linguagem humana e aponta como corrigir após a falha ocorrer.</td>
             </tr>
           </tbody>
         </table>
 
-        <h2 style="margin-top:8px;">[COLA JAVASCRIPT] Padrões para o Dev JS (M1 a M8)</h2>
+        <h2 style="margin-top:8px;">[REFERÊNCIA JS] Conceitos da Linguagem (M1 a M8)</h2>
         <table class="sheet-table">
           <tbody>
             <tr>
-              <td><strong>M1 (Escala):</strong></td>
-              <td><span class="code-inline">Math.round((base * Math.pow(razao, passo)) / 4) * 4</span>; entrelinha 1.25x (título) / 1.5x (texto).</td>
+              <td><strong>M1 (Potência/Arred.):</strong></td>
+              <td>Use <span class="code-inline">Math.pow(base, exp)</span> e divida/multiplique pelo passo ao usar <span class="code-inline">Math.round(...)</span>.</td>
             </tr>
             <tr>
-              <td><strong>M2 (Peso):</strong></td>
-              <td><span class="code-inline">.sort((a,b) =&gt; b.tamanho - a.tamanho || b.peso - a.peso || b.contraste - a.contraste)</span>.</td>
+              <td><strong>M2 (Ordenação):</strong></td>
+              <td><span class="code-inline">Array.prototype.sort((a, b) =&gt; ...)</span>; encadeie critérios de desempate com <span class="code-inline">||</span> e extraia IDs com <span class="code-inline">.map()</span>.</td>
             </tr>
             <tr>
-              <td><strong>M3 (Box Y):</strong></td>
-              <td>Somar alturas e espaços em cascata: <span class="code-inline">yBtn + cfg.btn + cfg.pad</span> = altura total (<span class="code-inline">256</span>).</td>
+              <td><strong>M3 (Soma em cascata):</strong></td>
+              <td>Acumule topo + altura de cada bloco + espaçamento até o próximo elemento e padding final.</td>
             </tr>
             <tr>
-              <td><strong>M4 (Estado):</strong></td>
-              <td>Se <span class="code-inline">novasVagas &lt;= 0</span>: <span class="code-inline">bloqueado: true</span>, rótulo <span class="code-inline">"Inscrições encerradas"</span>.</td>
+              <td><strong>M4 (Estado limite):</strong></td>
+              <td>Garanta piso zero (<span class="code-inline">Math.max(0, ...)</span>) e derive flag booleana + rótulo acessível a partir da contagem.</td>
             </tr>
             <tr>
-              <td><strong>M5 (Filtro):</strong></td>
-              <td>Descartar <span class="code-inline">item.darkPattern === true</span> e usar <span class="code-inline">item.titulo.toLowerCase().includes(termo)</span>.</td>
+              <td><strong>M5 (Filtro seguro):</strong></td>
+              <td>Normalize caixa com <span class="code-inline">.trim().toLowerCase()</span> e combine condições no <span class="code-inline">.filter(...)</span>.</td>
             </tr>
             <tr>
-              <td><strong>M6 (Wire):</strong></td>
-              <td><span class="code-inline">camadas.filter(c =&gt; c.decorativo !== true).map(c =&gt; c.sigla).join("-")</span>.</td>
+              <td><strong>M6 (Pipeline):</strong></td>
+              <td>Encadeie filtragem booleana, projeção da propriedade textual desejada e <span class="code-inline">.join("-")</span>.</td>
             </tr>
             <tr>
-              <td><strong>M7 (Form):</strong></td>
-              <td>Bloquear nome vazio (<span class="code-inline">#5</span>), <span class="code-inline">31/02/2026</span> (<span class="code-inline">#5</span>) e <span class="code-inline">!cursosValidos.includes(...)</span> (<span class="code-inline">#6</span>).</td>
+              <td><strong>M7 (Validação):</strong></td>
+              <td>Retorne cedo no primeiro campo inválido; verifique presença na lista permitida com <span class="code-inline">.includes(...)</span>.</td>
             </tr>
             <tr>
-              <td><strong>M8 (Layout):</strong></td>
-              <td><span class="code-inline">alturaCard = padCard + altConteudo + gapCard + altBotao + padCard</span> (<span class="code-inline">328x296-N11</span>).</td>
+              <td><strong>M8 (Árvore/Contrato):</strong></td>
+              <td>Subtraia duas vezes a margem lateral da largura do frame e some os níveis internos até a altura externa.</td>
             </tr>
           </tbody>
         </table>
