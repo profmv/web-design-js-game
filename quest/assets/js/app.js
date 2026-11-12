@@ -2,11 +2,11 @@
  * autor: Prof. Marcos V. Moraes
  * proposito: Controlador da aplicacao de 8 Missoes Simbioticas + Oficina Capstone (jornada minima de 3 horas)
  * criado: 2026-11-12T16:24:00-03:00
- * atualizado: 2026-11-12T19:38:00-03:00
- * versao: 2.1.0
+ * atualizado: 2026-11-12T19:56:00-03:00
+ * versao: 2.2.0
  */
 
-import { MISSOES } from "./missoes.js";
+import { MISSOES } from "./missoes.js?v=2.1.2";
 
 const TOTAL_MISSOES = MISSOES.length; // 8
 const STORAGE_KEY = "estudio-oito:fusao-snc-v2";
@@ -904,22 +904,41 @@ function montarBancadaUI_M8(container) {
 /* ---------- MOTOR DE TESTES AUTOMATIZADOS DE JAVASCRIPT (8 MISSOES) ---------- */
 
 function registrarWorkerTestes() {
+  // Capture real postMessage before any student code can overwrite self.postMessage
+  const enviar = self.postMessage.bind(self);
+
+  function compilarFuncao(codigo, nomeFuncao) {
+    try {
+      new Function(codigo);
+    } catch (syntaxErr) {
+      throw new Error(
+        `Erro de sintaxe no seu código: ${syntaxErr.message}. Confira chaves { }, parênteses ( ) e aspas.`
+      );
+    }
+    return new Function(`${codigo}\n return typeof ${nomeFuncao} === "function" ? ${nomeFuncao} : null;`)();
+  }
+
   self.onmessage = (ev) => {
-    const { missaoId, codigo } = ev.data;
+    const { missaoId, codigo, nonce } = ev.data || {};
+    if (!nonce) return;
     try {
       if (missaoId === 0) {
-        const fn = new Function(`${codigo}\n return typeof calcularEscala === "function" ? calcularEscala : null;`)();
+        const fn = compilarFuncao(codigo, "calcularEscala");
         if (!fn) throw new Error("Função calcularEscala(base, razao, passo, ehTitulo) não encontrada.");
         const rTitulo = fn(16, 1.25, 3, true);
         const rData = fn(16, 1.25, 1, false);
+        const rExtra = fn(16, 1.25, 2, true);
         if (!rTitulo || rTitulo.tamanho !== 32 || rTitulo.entrelinha !== 40) {
           throw new Error(`Teste 1 falhou: para (16, 1.25, 3, true) esperava { tamanho: 32, entrelinha: 40 }, obteve ${JSON.stringify(rTitulo)}`);
         }
         if (!rData || rData.tamanho !== 20 || rData.entrelinha !== 32) {
           throw new Error(`Teste 2 falhou: para (16, 1.25, 1, false) esperava { tamanho: 20, entrelinha: 32 }, obteve ${JSON.stringify(rData)}`);
         }
+        if (!rExtra || rExtra.tamanho !== 24 || rExtra.entrelinha !== 32) {
+          throw new Error(`Teste 3 falhou: para (16, 1.25, 2, true) esperava { tamanho: 24, entrelinha: 32 }, obteve ${JSON.stringify(rExtra)}`);
+        }
       } else if (missaoId === 1) {
-        const fn = new Function(`${codigo}\n return typeof ordenarPorPesoVisual === "function" ? ordenarPorPesoVisual : null;`)();
+        const fn = compilarFuncao(codigo, "ordenarPorPesoVisual");
         if (!fn) throw new Error("Função ordenarPorPesoVisual(elementos) não encontrada.");
         const amostra = [
           { id: "A", tamanho: 12, peso: 700, contraste: 7.2 },
@@ -934,26 +953,38 @@ function registrarWorkerTestes() {
         if (res !== "BCGEFDA") {
           throw new Error(`Teste falhou: esperava "BCGEFDA", mas sua função retornou "${res}". Desempatou pelo contraste (b.contraste - a.contraste)?`);
         }
+        const res2 = fn([
+          { id: "X", tamanho: 16, peso: 600, contraste: 4.5 },
+          { id: "Y", tamanho: 16, peso: 600, contraste: 8.0 },
+        ]);
+        if (res2 !== "YX") {
+          throw new Error(`Teste 2 falhou: em novo conjunto esperava "YX", mas retornou "${res2}".`);
+        }
       } else if (missaoId === 2) {
-        const fn = new Function(`${codigo}\n return typeof calcularBoxModel === "function" ? calcularBoxModel : null;`)();
+        const fn = compilarFuncao(codigo, "calcularBoxModel");
         if (!fn) throw new Error("Função calcularBoxModel(cfg) não encontrada.");
         const res = fn({ pad: 24, g1: 8, g2: 16, g3: 24, btn: 48 });
         if (!res || res.yData !== 72 || res.yDesc !== 112 || res.yBtn !== 184 || res.alturaCard !== 256) {
           throw new Error(`Teste falhou: esperava { yData: 72, yDesc: 112, yBtn: 184, alturaCard: 256 }, obteve ${JSON.stringify(res)}`);
         }
+        const res2 = fn({ pad: 16, g1: 8, g2: 16, g3: 16, btn: 40 });
+        if (!res2 || res2.yData !== 64 || res2.yDesc !== 104 || res2.yBtn !== 168 || res2.alturaCard !== 224) {
+          throw new Error(`Teste 2 falhou: calcule dinamicamente a partir dos campos de cfg; para pad=16 obteve ${JSON.stringify(res2)}`);
+        }
       } else if (missaoId === 3) {
-        const fn = new Function(`${codigo}\n return typeof processarInscricao === "function" ? processarInscricao : null;`)();
+        const fn = compilarFuncao(codigo, "processarInscricao");
         if (!fn) throw new Error("Função processarInscricao(vagasAtuais) não encontrada.");
         const r1 = fn(2);
         const r0 = fn(1);
-        if (!r1 || r1.vagas !== 1 || r1.bloqueado !== false) {
+        const r5 = fn(5);
+        if (!r1 || r1.vagas !== 1 || r1.bloqueado !== false || !r5 || r5.vagas !== 4 || r5.bloqueado !== false) {
           throw new Error("Teste 1 falhou: de 2 para 1 vaga o botão deve continuar desbloqueado (bloqueado: false).");
         }
         if (!r0 || r0.vagas !== 0 || r0.bloqueado !== true || r0.rotulo !== "Inscrições encerradas") {
           throw new Error(`Teste 2 falhou: ao zerar vagas, esperava { vagas: 0, bloqueado: true, rotulo: "Inscrições encerradas" }, obteve ${JSON.stringify(r0)}`);
         }
       } else if (missaoId === 4) {
-        const fn = new Function(`${codigo}\n return typeof filtrarEventosSeguros === "function" ? filtrarEventosSeguros : null;`)();
+        const fn = compilarFuncao(codigo, "filtrarEventosSeguros");
         if (!fn) throw new Error("Função filtrarEventosSeguros(eventos, categoriaAtiva, textoBusca) não encontrada.");
         const lista = [
           { titulo: "Oficina de Figma", categoria: "Workshop", darkPattern: false },
@@ -962,14 +993,15 @@ function registrarWorkerTestes() {
         ];
         const r1 = fn(lista, "Todas", "figma");
         const r2 = fn(lista, "Workshop", "");
+        const r3 = fn(lista, "Oficina", "javascript");
         if (!Array.isArray(r1) || r1.length !== 1 || r1[0].titulo !== "Oficina de Figma") {
           throw new Error("Teste 1 falhou: buscando 'figma' em 'Todas' deveria retornar apenas 'Oficina de Figma'.");
         }
-        if (r2.length !== 1) {
-          throw new Error("Teste 2 falhou: eventos com darkPattern: true devem ser descartados!");
+        if (r2.length !== 1 || !Array.isArray(r3) || r3.length !== 1 || r3[0].titulo !== "Aulão de JavaScript") {
+          throw new Error("Teste 2 falhou: eventos com darkPattern: true devem ser descartados e categoria/busca devem filtrar.");
         }
       } else if (missaoId === 5) {
-        const fn = new Function(`${codigo}\n return typeof compilarWireframe === "function" ? compilarWireframe : null;`)();
+        const fn = compilarFuncao(codigo, "compilarWireframe");
         if (!fn) throw new Error("Função compilarWireframe(camadas) não encontrada.");
         const camadas = [
           { sigla: "AB", decorativo: false },
@@ -980,11 +1012,24 @@ function registrarWorkerTestes() {
         if (res !== "AB-CA") {
           throw new Error(`Teste falhou: esperava "AB-CA" (sem a camada decorativa IM), mas obteve "${res}".`);
         }
+        const res2 = fn([
+          { sigla: "H", decorativo: false },
+          { sigla: "D", decorativo: true },
+          { sigla: "F", decorativo: false },
+        ]);
+        if (res2 !== "H-F") {
+          throw new Error(`Teste 2 falhou: esperava "H-F" em novo conjunto, mas obteve "${res2}".`);
+        }
       } else if (missaoId === 6) {
-        const fn = new Function(`${codigo}\n return typeof validarMatriculaAcad === "function" ? validarMatriculaAcad : null;`)();
+        const fn = compilarFuncao(codigo, "validarMatriculaAcad");
         if (!fn) throw new Error("Função validarMatriculaAcad(dados) não encontrada.");
+        const rNome = fn({ nome: "  ", data: "16/05/2026", curso: "Web JS" });
+        const rData = fn({ nome: "Lucas", data: "31/02/2026", curso: "Web JS" });
         const rCursoRuim = fn({ nome: "Lucas", data: "16/05/2026", curso: "ADS-999" });
         const rOk = fn({ nome: "Lucas", data: "16/05/2026", curso: "Web JS" });
+        if (!rNome || rNome.valido !== false || rNome.heuristica !== 5 || !rData || rData.valido !== false || rData.heuristica !== 5) {
+          throw new Error("Teste falhou: nome vazio e data '31/02/2026' devem retornar { valido: false, heuristica: 5 }.");
+        }
         if (!rCursoRuim || rCursoRuim.valido !== false || rCursoRuim.heuristica !== 6) {
           throw new Error("Teste falhou: quando o curso não está na lista ['UI/UX', 'Web JS', 'Redes'], deve retornar { valido: false, heuristica: 6 }.");
         }
@@ -992,7 +1037,7 @@ function registrarWorkerTestes() {
           throw new Error("Teste falhou: dados válidos deveriam retornar { valido: true }.");
         }
       } else if (missaoId === 7) {
-        const fn = new Function(`${codigo}\n return typeof calcularAutoLayout === "function" ? calcularAutoLayout : null;`)();
+        const fn = compilarFuncao(codigo, "calcularAutoLayout");
         if (!fn) throw new Error("Função calcularAutoLayout(arvore) não encontrada.");
         const res = fn({
           larguraFrame: 360,
@@ -1011,16 +1056,43 @@ function registrarWorkerTestes() {
         if (!res || res.assinatura !== "328x296-N11") {
           throw new Error(`Teste falhou: esperava assinatura "328x296-N11", mas retornou ${JSON.stringify(res)}.`);
         }
+        const res2 = fn({
+          larguraFrame: 400,
+          margemGrid: 20,
+          padCard: 16,
+          gapCab: 8,
+          gapCont: 12,
+          gapCard: 16,
+          altTitulo: 40,
+          altData: 24,
+          altChips: 24,
+          altDescDuasLinhas: 48,
+          altBotao: 48,
+          camadasNomeadas: 9,
+        });
+        if (!res2 || res2.assinatura !== "360x260-N9") {
+          throw new Error(`Teste 2 falhou: calcule dinamicamente a partir de arvore; esperava "360x260-N9", obteve ${JSON.stringify(res2)}.`);
+        }
       }
-      self.postMessage({ ok: true });
+      enviar({ nonce, ok: true });
     } catch (err) {
-      self.postMessage({ ok: false, mensagem: err && err.message ? err.message : String(err) });
+      enviar({ nonce, ok: false, mensagem: err && err.message ? err.message : String(err) });
     }
   };
 }
 
+function gerarNonceWorker() {
+  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+}
+
 function executarNoWorkerComTimeout(missaoId, codigo, timeoutMs = 2000) {
   return new Promise((resolve) => {
+    const nonce = gerarNonceWorker();
     const src = `(${registrarWorkerTestes.toString()})();`;
     const blobUrl = URL.createObjectURL(new Blob([src], { type: "application/javascript" }));
     const worker = new Worker(blobUrl);
@@ -1042,9 +1114,12 @@ function executarNoWorkerComTimeout(missaoId, codigo, timeoutMs = 2000) {
       });
     }, timeoutMs);
 
-    worker.onmessage = (ev) => finalizar(ev.data || { ok: false, mensagem: "Resposta inválida dos testes." });
+    worker.onmessage = (ev) => {
+      if (!ev.data || ev.data.nonce !== nonce) return;
+      finalizar(ev.data);
+    };
     worker.onerror = (ev) => finalizar({ ok: false, mensagem: ev.message || "Erro ao executar código JavaScript." });
-    worker.postMessage({ missaoId, codigo });
+    worker.postMessage({ missaoId, codigo, nonce });
   });
 }
 

@@ -2,8 +2,8 @@
  * autor: Prof. Marcos V. Moraes
  * proposito: Controlador do Placar Ao Vivo do Professor (valida codigos SNC1. para 8 missoes, calcula pontuacao e exporta CSV)
  * criado: 2026-11-12T16:26:00-03:00
- * atualizado: 2026-11-12T19:38:00-03:00
- * versao: 2.1.0
+ * atualizado: 2026-11-12T19:57:00-03:00
+ * versao: 2.1.1
  */
 
 const TOTAL_MISSOES = 8;
@@ -170,6 +170,11 @@ function renderizarPlacar() {
             ? `<span class="chip chip-ok">[OK] ${TOTAL_MISSOES}/${TOTAL_MISSOES} Concluídas</span>`
             : `<span class="chip chip-select">[EM CURSO] ${r.concluidas}/${TOTAL_MISSOES}</span>`;
 
+      const pontosValidados = r.seloValido && r.consistente;
+      const pontosHtml = pontosValidados
+        ? `<strong style="font-family:var(--ff-mono); font-size:16px;">${r.pontos} pts</strong>`
+        : `<strong style="font-family:var(--ff-mono); font-size:16px; color:var(--bad);">--</strong>`;
+
       return `
         <tr>
           <td><strong>${idx + 1}º</strong></td>
@@ -178,7 +183,7 @@ function renderizarPlacar() {
             <span style="font-size:12px; color:var(--tx-2);">${escaparHtml(r.membros.join(" · "))}</span>
           </td>
           <td><div style="white-space:nowrap;">${bolinhas}</div><span style="font-size:12px;">(${r.concluidas}/${TOTAL_MISSOES})</span></td>
-          <td><strong style="font-family:var(--ff-mono); font-size:16px;">${r.pontos} pts</strong></td>
+          <td>${pontosHtml}</td>
           <td style="font-family:var(--ff-mono);">${formatarTempo(r.segundos)}</td>
           <td style="font-size:12px;">${r.erros} erro(s) / ${r.dicas} dica(s) / ${r.sintaxe} sintaxe</td>
           <td>${statusHtml}</td>
@@ -218,7 +223,8 @@ $("btn-toggle-gabarito").addEventListener("click", () => {
 $("btn-exportar-csv").addEventListener("click", () => {
   const linhas = [["posicao", "squad", "integrantes", "fechaduras", "pontos", "tempo_s", "erros", "dicas", "sintaxe", "selo_valido", "consistente"]];
   ultimoRanking.forEach((r, i) => {
-    linhas.push([i + 1, r.squad, r.membros.join(" / "), r.concluidas, r.pontos, r.segundos, r.erros, r.dicas, r.sintaxe, r.seloValido ? "SIM" : "NAO", r.consistente ? "SIM" : "NAO"]);
+    const ptsExport = r.seloValido && r.consistente ? r.pontos : "";
+    linhas.push([i + 1, r.squad, r.membros.join(" / "), r.concluidas, ptsExport, r.segundos, r.erros, r.dicas, r.sintaxe, r.seloValido ? "SIM" : "NAO", r.consistente ? "SIM" : "NAO"]);
   });
   // Runtime Encoding Exception: UTF-8 with BOM required by Excel pt-BR to read accents properly
   const csv = "\uFEFF" + linhas.map((l) => l.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
