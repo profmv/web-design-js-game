@@ -2,11 +2,11 @@
  * autor: Prof. Marcos V. Moraes
  * proposito: Controlador da aplicacao de 8 Missoes Simbioticas + Oficina Capstone (jornada minima de 3 horas)
  * criado: 2026-11-12T16:24:00-03:00
- * atualizado: 2026-11-12T19:56:00-03:00
- * versao: 2.2.0
+ * atualizado: 2026-11-12T20:42:00-03:00
+ * versao: 2.2.1
  */
 
-import { MISSOES } from "./missoes.js?v=2.1.2";
+import { MISSOES } from "./missoes.js?v=2.2.1";
 
 const TOTAL_MISSOES = MISSOES.length; // 8
 const STORAGE_KEY = "estudio-oito:fusao-snc-v2";
@@ -907,12 +907,237 @@ function registrarWorkerTestes() {
   // Capture real postMessage before any student code can overwrite self.postMessage
   const enviar = self.postMessage.bind(self);
 
+  function descreverAberturaFaltante(abertura, linhaAbertura, qtd) {
+    if (abertura === "{") {
+      return qtd > 1
+        ? `${qtd} chaves '{' (última aberta na linha ${linhaAbertura})`
+        : `1 chave '{' aberta na linha ${linhaAbertura}`;
+    }
+    if (abertura === "(") {
+      return qtd > 1
+        ? `${qtd} parênteses '(' (último aberto na linha ${linhaAbertura})`
+        : `1 parêntese '(' aberto na linha ${linhaAbertura}`;
+    }
+    return qtd > 1
+      ? `${qtd} colchetes '[' (último aberto na linha ${linhaAbertura})`
+      : `1 colchete '[' aberto na linha ${linhaAbertura}`;
+  }
+
+  // Advisory scanner called only when new Function throws SyntaxError
+  function analisarSintaxeJS(codigo) {
+    const src = String(codigo || "");
+    const n = src.length;
+    const delims = [];
+    const modos = [{ tipo: "codigo", linha: 1 }];
+    const aberturaDe = { "}": "{", ")": "(", "]": "[" };
+    let linha = 1;
+    let i = 0;
+
+    while (i < n) {
+      const modoAtual = modos[modos.length - 1];
+      const ch = src[i];
+
+      if (modoAtual.tipo === "template") {
+        if (ch === "\\") {
+          if (src[i + 1] === "\r" && src[i + 2] === "\n") {
+            linha++;
+            i += 3;
+          } else if (src[i + 1] === "\n") {
+            linha++;
+            i += 2;
+          } else {
+            i += 2;
+          }
+          continue;
+        }
+        if (ch === "`") {
+          modos.pop();
+          i++;
+          continue;
+        }
+        if (ch === "$" && src[i + 1] === "{") {
+          delims.push({ ch: "{", linha, retomaTemplate: true });
+          modos.push({ tipo: "codigo", linha });
+          i += 2;
+          continue;
+        }
+        if (ch === "\n") linha++;
+        i++;
+        continue;
+      }
+
+      if (ch === "\n") {
+        linha++;
+        i++;
+        continue;
+      }
+
+      if (ch === "/" && src[i + 1] === "/") {
+        i += 2;
+        while (i < n && src[i] !== "\n") i++;
+        continue;
+      }
+
+      if (ch === "/" && src[i + 1] === "*") {
+        const linhaComentario = linha;
+        i += 2;
+        let fechado = false;
+        while (i < n) {
+          if (src[i] === "*" && src[i + 1] === "/") {
+            i += 2;
+            fechado = true;
+            break;
+          }
+          if (src[i] === "\n") linha++;
+          i++;
+        }
+        if (!fechado) {
+          return `Erro de sintaxe: comentário '/*' aberto na linha ${linhaComentario} não foi fechado com '*/'.`;
+        }
+        continue;
+      }
+
+      if (ch === "'" || ch === '"') {
+        const aspa = ch;
+        const linhaAspa = linha;
+        i++;
+        let fechou = false;
+        while (i < n) {
+          const c = src[i];
+          if (c === "\\") {
+            if (src[i + 1] === "\r" && src[i + 2] === "\n") {
+              linha++;
+              i += 3;
+            } else if (src[i + 1] === "\n") {
+              linha++;
+              i += 2;
+            } else {
+              i += 2;
+            }
+            continue;
+          }
+          if (c === aspa) {
+            i++;
+            fechou = true;
+            break;
+          }
+          if (c === "\n") {
+            return `Erro de sintaxe: aspas abertas na linha ${linhaAspa} não foram fechadas.`;
+          }
+          i++;
+        }
+        if (!fechou) {
+          return `Erro de sintaxe: aspas abertas na linha ${linhaAspa} não foram fechadas.`;
+        }
+        continue;
+      }
+
+      if (ch === "`") {
+        modos.push({ tipo: "template", linha });
+        i++;
+        continue;
+      }
+
+      if (ch === "{" || ch === "(" || ch === "[") {
+        delims.push({ ch, linha, retomaTemplate: false });
+        i++;
+        continue;
+      }
+
+      if (ch === "}" || ch === ")" || ch === "]") {
+        const esperado = aberturaDe[ch];
+        if (delims.length === 0) {
+          return `Erro de sintaxe: '${ch}' na linha ${linha} não tem um '${esperado}' correspondente.`;
+        }
+        const topo = delims[delims.length - 1];
+        if (topo.ch === esperado) {
+          delims.pop();
+          if (topo.retomaTemplate && modos.length > 1) {
+            modos.pop();
+          }
+        } else {
+          let idxCorresp = -1;
+          for (let k = delims.length - 1; k >= 0; k--) {
+            if (delims[k].ch === esperado) {
+              idxCorresp = k;
+              break;
+            }
+          }
+          if (idxCorresp >= 0) {
+            let qtd = 0;
+            for (let k = idxCorresp + 1; k < delims.length; k++) {
+              if (delims[k].ch === topo.ch) qtd++;
+            }
+            return `Erro de sintaxe: falta fechar ${descreverAberturaFaltante(topo.ch, topo.linha, qtd)} antes de '${ch}' na linha ${linha}.`;
+          }
+          return `Erro de sintaxe: '${ch}' na linha ${linha} não tem um '${esperado}' correspondente.`;
+        }
+      }
+
+      i++;
+    }
+
+    if (delims.length > 0) {
+      const ultimo = delims[delims.length - 1];
+      let qtd = 0;
+      for (const item of delims) {
+        if (item.ch === ultimo.ch) qtd++;
+      }
+      return `Erro de sintaxe: falta fechar ${descreverAberturaFaltante(ultimo.ch, ultimo.linha, qtd)}.`;
+    }
+
+    const modoFinal = modos[modos.length - 1];
+    if (modoFinal.tipo === "template") {
+      return `Erro de sintaxe: aspas ou crase abertas na linha ${modoFinal.linha} não foram fechadas.`;
+    }
+
+    return null;
+  }
+
+  function traduzirMensagemSintaxe(msg) {
+    const texto = String(msg || "");
+    const traducoes = [
+      ["Unexpected end of input", "o código terminou antes do esperado (falta fechar algo)"],
+      ["Unexpected identifier", "palavra inesperada (falta vírgula, ponto e vírgula ou operador?)"],
+      ["missing ) after argument list", "falta fechar um parêntese na chamada de função"],
+      ["Invalid or unexpected token", "caractere inválido ou aspas não fechadas"],
+    ];
+    for (const [original, pt] of traducoes) {
+      if (texto.includes(original)) {
+        return texto.replace(original, pt);
+      }
+    }
+    return texto;
+  }
+
+  function randInt(min, max) {
+    return min + Math.floor(Math.random() * (max - min + 1));
+  }
+
+  function escolher(lista) {
+    return lista[randInt(0, lista.length - 1)];
+  }
+
+  function embaralhar(lista) {
+    const copia = [...lista];
+    for (let i = copia.length - 1; i > 0; i--) {
+      const j = randInt(0, i);
+      [copia[i], copia[j]] = [copia[j], copia[i]];
+    }
+    return copia;
+  }
+
   function compilarFuncao(codigo, nomeFuncao) {
     try {
       new Function(codigo);
     } catch (syntaxErr) {
+      const erroScanner = analisarSintaxeJS(codigo);
+      if (erroScanner) {
+        throw new Error(erroScanner);
+      }
+      const detalhe = traduzirMensagemSintaxe(syntaxErr && syntaxErr.message);
       throw new Error(
-        `Erro de sintaxe no seu código: ${syntaxErr.message}. Confira chaves { }, parênteses ( ) e aspas.`
+        `Erro de sintaxe no seu código: ${detalhe}. Confira chaves { }, parênteses ( ) e aspas.`
       );
     }
     return new Function(`${codigo}\n return typeof ${nomeFuncao} === "function" ? ${nomeFuncao} : null;`)();
@@ -937,6 +1162,28 @@ function registrarWorkerTestes() {
         if (!rExtra || rExtra.tamanho !== 24 || rExtra.entrelinha !== 32) {
           throw new Error(`Teste 3 falhou: para (16, 1.25, 2, true) esperava { tamanho: 24, entrelinha: 32 }, obteve ${JSON.stringify(rExtra)}`);
         }
+        let rBase;
+        let rRazao;
+        let rPasso;
+        let rEhTitulo;
+        do {
+          rBase = escolher([12, 14, 16, 18, 20]);
+          rRazao = escolher([1.2, 1.25, 1.333, 1.5]);
+          rPasso = randInt(0, 4);
+          rEhTitulo = Math.random() < 0.5;
+        } while (
+          rBase === 16 &&
+          rRazao === 1.25 &&
+          ((rPasso === 3 && rEhTitulo) || (rPasso === 1 && !rEhTitulo) || (rPasso === 2 && rEhTitulo))
+        );
+        const espTamanho = Math.round((rBase * Math.pow(rRazao, rPasso)) / 4) * 4;
+        const espEntrelinha = Math.round((espTamanho * (rEhTitulo ? 1.25 : 1.5)) / 4) * 4;
+        const rRand = fn(rBase, rRazao, rPasso, rEhTitulo);
+        if (!rRand || rRand.tamanho !== espTamanho || rRand.entrelinha !== espEntrelinha) {
+          throw new Error(
+            `Teste aleatório falhou: para (${rBase}, ${rRazao}, ${rPasso}, ${rEhTitulo}) esperava { tamanho: ${espTamanho}, entrelinha: ${espEntrelinha} }, obteve ${JSON.stringify(rRand)}`
+          );
+        }
       } else if (missaoId === 1) {
         const fn = compilarFuncao(codigo, "ordenarPorPesoVisual");
         if (!fn) throw new Error("Função ordenarPorPesoVisual(elementos) não encontrada.");
@@ -960,6 +1207,34 @@ function registrarWorkerTestes() {
         if (res2 !== "YX") {
           throw new Error(`Teste 2 falhou: em novo conjunto esperava "YX", mas retornou "${res2}".`);
         }
+        const idsRand = embaralhar(["H", "J", "K", "L", "M", "N", "P", "Q"]).slice(0, 5);
+        const tamEmpate = escolher([16, 20, 24]);
+        const pesoEmpate = escolher([400, 600, 700]);
+        const usadas = new Set();
+        const amostraBase = [];
+        for (let idx = 0; idx < idsRand.length; idx++) {
+          let tamanho = idx < 2 ? tamEmpate : escolher([12, 16, 20, 24, 32]);
+          let peso = idx < 2 ? pesoEmpate : escolher([400, 600, 700]);
+          let contraste;
+          let chave;
+          do {
+            contraste = Number((randInt(32, 180) / 10).toFixed(1));
+            chave = `${tamanho}|${peso}|${contraste}`;
+          } while (usadas.has(chave));
+          usadas.add(chave);
+          amostraBase.push({ id: idsRand[idx], tamanho, peso, contraste });
+        }
+        const amostraRand = embaralhar(amostraBase);
+        const espRand = [...amostraRand]
+          .sort((a, b) => (b.tamanho - a.tamanho) || (b.peso - a.peso) || (b.contraste - a.contraste))
+          .map((e) => e.id)
+          .join("");
+        const resRand = fn(amostraRand.map((e) => ({ ...e })));
+        if (resRand !== espRand) {
+          throw new Error(
+            `Teste aleatório falhou: para ${JSON.stringify(amostraRand)} esperava "${espRand}", obteve "${resRand}".`
+          );
+        }
       } else if (missaoId === 2) {
         const fn = compilarFuncao(codigo, "calcularBoxModel");
         if (!fn) throw new Error("Função calcularBoxModel(cfg) não encontrada.");
@@ -970,6 +1245,35 @@ function registrarWorkerTestes() {
         const res2 = fn({ pad: 16, g1: 8, g2: 16, g3: 16, btn: 40 });
         if (!res2 || res2.yData !== 64 || res2.yDesc !== 104 || res2.yBtn !== 168 || res2.alturaCard !== 224) {
           throw new Error(`Teste 2 falhou: calcule dinamicamente a partir dos campos de cfg; para pad=16 obteve ${JSON.stringify(res2)}`);
+        }
+        let cfgRand;
+        do {
+          cfgRand = {
+            pad: escolher([8, 12, 16, 20, 24, 28, 32]),
+            g1: escolher([4, 8, 12, 16]),
+            g2: escolher([8, 12, 16, 20, 24]),
+            g3: escolher([12, 16, 20, 24, 32]),
+            btn: escolher([40, 44, 48, 52]),
+          };
+        } while (
+          (cfgRand.pad === 24 && cfgRand.g1 === 8 && cfgRand.g2 === 16 && cfgRand.g3 === 24 && cfgRand.btn === 48) ||
+          (cfgRand.pad === 16 && cfgRand.g1 === 8 && cfgRand.g2 === 16 && cfgRand.g3 === 16 && cfgRand.btn === 40)
+        );
+        const espData = cfgRand.pad + 40 + cfgRand.g1;
+        const espDesc = espData + 24 + cfgRand.g2;
+        const espBtn = espDesc + 48 + cfgRand.g3;
+        const espAlt = espBtn + cfgRand.btn + cfgRand.pad;
+        const resRand = fn({ ...cfgRand });
+        if (
+          !resRand ||
+          resRand.yData !== espData ||
+          resRand.yDesc !== espDesc ||
+          resRand.yBtn !== espBtn ||
+          resRand.alturaCard !== espAlt
+        ) {
+          throw new Error(
+            `Teste aleatório falhou: para ${JSON.stringify(cfgRand)} esperava { yData: ${espData}, yDesc: ${espDesc}, yBtn: ${espBtn}, alturaCard: ${espAlt} }, obteve ${JSON.stringify(resRand)}`
+          );
         }
       } else if (missaoId === 3) {
         const fn = compilarFuncao(codigo, "processarInscricao");
@@ -982,6 +1286,21 @@ function registrarWorkerTestes() {
         }
         if (!r0 || r0.vagas !== 0 || r0.bloqueado !== true || r0.rotulo !== "Inscrições encerradas") {
           throw new Error(`Teste 2 falhou: ao zerar vagas, esperava { vagas: 0, bloqueado: true, rotulo: "Inscrições encerradas" }, obteve ${JSON.stringify(r0)}`);
+        }
+        const vagasRand = escolher([0, 3, 4, 6, 7, 8, 9, 10, 12, 15, 20]);
+        const novasRand = vagasRand - 1;
+        const espBloqueado = novasRand <= 0;
+        const espVagas = espBloqueado ? 0 : novasRand;
+        const rRand = fn(vagasRand);
+        if (
+          !rRand ||
+          rRand.vagas !== espVagas ||
+          rRand.bloqueado !== espBloqueado ||
+          (espBloqueado && rRand.rotulo !== "Inscrições encerradas")
+        ) {
+          throw new Error(
+            `Teste aleatório falhou: para vagasAtuais=${vagasRand} esperava { vagas: ${espVagas}, bloqueado: ${espBloqueado}${espBloqueado ? ', rotulo: "Inscrições encerradas"' : ""} }, obteve ${JSON.stringify(rRand)}`
+          );
         }
       } else if (missaoId === 4) {
         const fn = compilarFuncao(codigo, "filtrarEventosSeguros");
@@ -999,6 +1318,38 @@ function registrarWorkerTestes() {
         }
         if (r2.length !== 1 || !Array.isArray(r3) || r3.length !== 1 || r3[0].titulo !== "Aulão de JavaScript") {
           throw new Error("Teste 2 falhou: eventos com darkPattern: true devem ser descartados e categoria/busca devem filtrar.");
+        }
+        const categorias = ["Workshop", "Oficina", "Palestra"];
+        const temas = ["Grid", "Tokens", "Layout", "DOM", "Contraste", "Navegação"];
+        const catAtiva = escolher(["Todas", ...categorias]);
+        const temaAlvo = escolher(temas);
+        const temaOutro = escolher(temas.filter((t) => t !== temaAlvo));
+        const catSeguro = catAtiva === "Todas" ? escolher(categorias) : catAtiva;
+        const catOutro = escolher(categorias.filter((c) => c !== catSeguro));
+        const buscaRand = Math.random() < 0.35
+          ? ""
+          : (Math.random() < 0.5 ? temaAlvo.toLowerCase() : temaAlvo.toUpperCase());
+        const listaRand = embaralhar([
+          { titulo: `Oficina de ${temaAlvo} Prático`, categoria: catSeguro, darkPattern: false },
+          { titulo: `${temaAlvo} Urgente Só Hoje`, categoria: catSeguro, darkPattern: true },
+          { titulo: `Aula de ${temaOutro}`, categoria: catSeguro, darkPattern: false },
+          { titulo: `Encontro de ${temaAlvo} Aberto`, categoria: catOutro, darkPattern: false },
+          { titulo: `Painel de ${temaOutro}`, categoria: catOutro, darkPattern: false },
+        ]);
+        const termoRef = buscaRand.trim().toLowerCase();
+        const espLista = listaRand.filter((item) => {
+          if (item.darkPattern === true) return false;
+          const okCat = catAtiva === "Todas" || item.categoria === catAtiva;
+          const okBusca = termoRef === "" || item.titulo.toLowerCase().includes(termoRef);
+          return okCat && okBusca;
+        });
+        const rRand = fn(listaRand.map((e) => ({ ...e })), catAtiva, buscaRand);
+        const espTitulos = espLista.map((e) => e.titulo);
+        const obtTitulos = Array.isArray(rRand) ? rRand.map((e) => e && e.titulo) : null;
+        if (!Array.isArray(rRand) || JSON.stringify(obtTitulos) !== JSON.stringify(espTitulos)) {
+          throw new Error(
+            `Teste aleatório falhou: para categoria="${catAtiva}", busca="${buscaRand}" em ${JSON.stringify(listaRand)} esperava títulos ${JSON.stringify(espTitulos)}, obteve ${JSON.stringify(obtTitulos)}`
+          );
         }
       } else if (missaoId === 5) {
         const fn = compilarFuncao(codigo, "compilarWireframe");
@@ -1020,6 +1371,19 @@ function registrarWorkerTestes() {
         if (res2 !== "H-F") {
           throw new Error(`Teste 2 falhou: esperava "H-F" em novo conjunto, mas obteve "${res2}".`);
         }
+        const siglasRand = embaralhar(["NV", "HD", "CT", "BN", "CD", "FT", "TB", "MD", "LG", "AV", "BT", "SR"]).slice(0, randInt(5, 7));
+        const camadasRand = siglasRand.map((sigla, idx) => ({
+          sigla,
+          funcao: idx % 2 === 0 ? "navegar" : "exibir",
+          decorativo: idx === 1 ? true : idx <= 2 ? false : Math.random() < 0.4,
+        }));
+        const espWire = camadasRand.filter((c) => c.decorativo !== true).map((c) => c.sigla).join("-");
+        const resRand = fn(camadasRand.map((c) => ({ ...c })));
+        if (resRand !== espWire) {
+          throw new Error(
+            `Teste aleatório falhou: para ${JSON.stringify(camadasRand)} esperava "${espWire}", obteve "${resRand}".`
+          );
+        }
       } else if (missaoId === 6) {
         const fn = compilarFuncao(codigo, "validarMatriculaAcad");
         if (!fn) throw new Error("Função validarMatriculaAcad(dados) não encontrada.");
@@ -1035,6 +1399,52 @@ function registrarWorkerTestes() {
         }
         if (!rOk || rOk.valido !== true) {
           throw new Error("Teste falhou: dados válidos deveriam retornar { valido: true }.");
+        }
+        const cursosValidosRand = ["UI/UX", "Web JS", "Redes"];
+        const cenarioRand = randInt(0, 3);
+        let dadosRand;
+        let espValido;
+        let espHeuristica = null;
+        if (cenarioRand === 0) {
+          dadosRand = {
+            nome: escolher(["", " ", "   "]),
+            data: escolher(["18/05/2026", "22/06/2026"]),
+            curso: escolher(cursosValidosRand),
+          };
+          espValido = false;
+          espHeuristica = 5;
+        } else if (cenarioRand === 1) {
+          dadosRand = {
+            nome: escolher(["Ana Silva", "Bruno Costa", "Carla Dias"]),
+            data: "31/02/2026",
+            curso: escolher(cursosValidosRand),
+          };
+          espValido = false;
+          espHeuristica = 5;
+        } else if (cenarioRand === 2) {
+          dadosRand = {
+            nome: escolher(["Ana Silva", "Bruno Costa", "Carla Dias"]),
+            data: escolher(["18/05/2026", "22/06/2026"]),
+            curso: escolher(["ENG-101", "BIO-202", "ADM-303"]),
+          };
+          espValido = false;
+          espHeuristica = 6;
+        } else {
+          dadosRand = {
+            nome: escolher(["Ana Silva", "Bruno Costa", "Carla Dias", "Diego Souza"]),
+            data: escolher(["18/05/2026", "22/06/2026", "10/08/2026"]),
+            curso: escolher(cursosValidosRand),
+          };
+          espValido = true;
+        }
+        const rRand = fn({ ...dadosRand });
+        if (!rRand || rRand.valido !== espValido || (espHeuristica !== null && rRand.heuristica !== espHeuristica)) {
+          const espResumo = espHeuristica !== null
+            ? `{ valido: false, heuristica: ${espHeuristica} }`
+            : "{ valido: true }";
+          throw new Error(
+            `Teste aleatório falhou: para ${JSON.stringify(dadosRand)} esperava ${espResumo}, obteve ${JSON.stringify(rRand)}`
+          );
         }
       } else if (missaoId === 7) {
         const fn = compilarFuncao(codigo, "calcularAutoLayout");
@@ -1072,6 +1482,37 @@ function registrarWorkerTestes() {
         });
         if (!res2 || res2.assinatura !== "360x260-N9") {
           throw new Error(`Teste 2 falhou: calcule dinamicamente a partir de arvore; esperava "360x260-N9", obteve ${JSON.stringify(res2)}.`);
+        }
+        let arvoreRand;
+        do {
+          arvoreRand = {
+            larguraFrame: escolher([360, 375, 390, 412, 428]),
+            margemGrid: escolher([12, 16, 20, 24]),
+            padCard: escolher([16, 20, 24]),
+            gapCab: escolher([4, 8, 12]),
+            gapCont: escolher([12, 16, 20]),
+            gapCard: escolher([16, 20, 24]),
+            altTitulo: escolher([36, 40, 44]),
+            altData: escolher([20, 24]),
+            altChips: escolher([24, 28]),
+            altDescDuasLinhas: escolher([48, 56]),
+            altBotao: escolher([44, 48]),
+            camadasNomeadas: randInt(8, 15),
+          };
+        } while (
+          (arvoreRand.larguraFrame === 360 && arvoreRand.margemGrid === 16 && arvoreRand.camadasNomeadas === 11) ||
+          (arvoreRand.larguraFrame === 400 && arvoreRand.margemGrid === 20 && arvoreRand.camadasNomeadas === 9)
+        );
+        const espLarg = arvoreRand.larguraFrame - (2 * arvoreRand.margemGrid);
+        const espCab = arvoreRand.altTitulo + arvoreRand.gapCab + arvoreRand.altData + arvoreRand.gapCab + arvoreRand.altChips;
+        const espCont = espCab + arvoreRand.gapCont + arvoreRand.altDescDuasLinhas;
+        const espAlt = arvoreRand.padCard + espCont + arvoreRand.gapCard + arvoreRand.altBotao + arvoreRand.padCard;
+        const espAssinatura = `${espLarg}x${espAlt}-N${arvoreRand.camadasNomeadas}`;
+        const rRand = fn({ ...arvoreRand });
+        if (!rRand || rRand.assinatura !== espAssinatura) {
+          throw new Error(
+            `Teste aleatório falhou: para ${JSON.stringify(arvoreRand)} esperava assinatura "${espAssinatura}", obteve ${JSON.stringify(rRand)}`
+          );
         }
       }
       enviar({ nonce, ok: true });
