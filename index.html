@@ -1,0 +1,196 @@
+<!--
+autor: Prof. Marcos V. Moraes
+proposito: Portal principal da Operacao Estudio Oito (Fusao UI/UX Figma + Desenvolvimento Web JavaScript - Jornada 3h+ / 8 Missoes)
+criado: 2026-11-12T16:20:00-03:00
+atualizado: 2026-11-12T17:30:00-03:00
+versao: 2.0.0
+-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Operação Estúdio Oito — Fusão UI/UX &amp; JavaScript</title>
+  <meta name="description" content="Atividade colaborativa entre turmas de UI/UX (Figma) e Desenvolvimento Web (JavaScript), organizada em Squads com papéis táticos para todos os alunos.">
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/portal.css">
+</head>
+<body>
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/><path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0 -3 -3.85"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24"><path d="M16.555 3.843l3.602 3.602a2.877 2.877 0 0 1 0 4.069l-2.643 2.643a2.877 2.877 0 0 1 -4.069 0l-.301 -.301l-6.558 6.558a2 2 0 0 1 -1.239 .578l-.175 .008h-1.172a1 1 0 0 1 -.993 -.883l-.007 -.117v-1.172a2 2 0 0 1 .467 -1.284l.119 -.13l.414 -.414h2v-2h2v-2l2.144 -2.144l-.301 -.301a2.877 2.877 0 0 1 0 -4.069l2.643 -2.643a2.877 2.877 0 0 1 4.069 0z"/><path d="M15 9h.01"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><path d="M7 8l-4 4l4 4"/><path d="M17 8l4 4l-4 4"/><path d="M14 4l-4 16"/></symbol>
+    <symbol id="i-frame" viewBox="0 0 24 24"><path d="M4 7l16 0"/><path d="M4 17l16 0"/><path d="M7 4l0 16"/><path d="M17 4l0 16"/></symbol>
+    <symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 9v-6h12v6"/><path d="M6 18h-2a2 2 0 0 1 -2 -2v-5a2 2 0 0 1 2 -2h16a2 2 0 0 1 2 2v5a2 2 0 0 1 -2 2h-2"/><path d="M6 14h12v7h-12z"/></symbol>
+    <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3"/><path d="M9 12l2 2l4 -4"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12l14 0"/><path d="M13 18l6 -6"/><path d="M13 6l6 6"/></symbol>
+    <symbol id="i-component" viewBox="0 0 24 24"><path d="M3 12l3 3l3 -3l-3 -3z"/><path d="M15 12l3 3l3 -3l-3 -3z"/><path d="M9 6l3 3l3 -3l-3 -3z"/><path d="M9 18l3 3l3 -3l-3 -3z"/></symbol>
+    <symbol id="i-clipboard" viewBox="0 0 24 24"><path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><path d="M9 12h6"/><path d="M9 16h6"/></symbol>
+  </svg>
+
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+  <header class="ws-toolbar">
+    <a class="ws-brand" href="index.html">
+      <span class="ws-brand-mark" aria-hidden="true">8</span>
+      <span>Estúdio Oito &middot; Fusão UI + JS</span>
+    </a>
+    <span class="ws-toolbar-sep" aria-hidden="true"></span>
+    <span class="toolbar-file">Estúdio Oito &middot; Desafio UI/UX &amp; JavaScript</span>
+    <span class="ws-toolbar-spacer"></span>
+    <a class="ws-tool-btn" href="impressos/prancheta-conselheiro.html">
+      <svg class="ic ic-16" aria-hidden="true"><use href="#i-printer"/></svg>
+      <span>Prancheta #1</span>
+    </a>
+    <a class="ws-tool-btn" href="impressos/passaporte-qa.html">
+      <svg class="ic ic-16" aria-hidden="true"><use href="#i-clipboard"/></svg>
+      <span>Passaporte QA #2</span>
+    </a>
+    <a class="ws-tool-btn is-active" href="placar/index.html">
+      <svg class="ic ic-16" aria-hidden="true"><use href="#i-shield-check"/></svg>
+      <span>Placar &amp; Guia</span>
+    </a>
+  </header>
+
+  <main id="conteudo" class="ws-canvas-bg portal-canvas">
+    <div class="frame-name" aria-hidden="true">
+      <svg class="ic ic-16" aria-hidden="true"><use href="#i-frame"/></svg>00-operacao-estudio-oito
+    </div>
+
+    <section class="portal-frame" aria-labelledby="titulo">
+      <div class="intro">
+        <span class="eyebrow">
+          <svg class="ic ic-16" aria-hidden="true"><use href="#i-users"/></svg>
+          Desafio em Squad &middot; 8 Fechaduras
+        </span>
+        <h1 id="titulo">Quando o Design destrava o Código</h1>
+        <p class="lead">
+          O app <strong>Agenda &amp; FilaZero do Campus</strong> entra no ar hoje, mas a interface está desalinhada e o JavaScript parou de responder. Reúna seu Squad para corrigir o visual, programar os algoritmos e destravar todas as 8 etapas do lançamento.
+        </p>
+
+        <div class="squad-roles" aria-label="Papéis do Squad">
+          <div class="role-card role-ui">
+            <strong><span class="chip chip-select">[UI/UX]</span> Arquiteto(a) de Interface</strong>
+            <span>Ajusta escala modular, ritmo de 8px, contraste WCAG, padrões de usabilidade e Auto Layout para gerar os Design Tokens.</span>
+          </div>
+          <div class="role-card role-js">
+            <strong><span class="chip chip-js">[DEV JS]</span> Engenheiro(a) JavaScript</strong>
+            <span>Programa regras de escala, ordenação, box model, estados de botão, filtros seguros, validação de formulário e layout.</span>
+          </div>
+          <div class="role-card role-po">
+            <strong><span class="chip chip-po">[PO]</span> Conselheiro(a) de Produto</strong>
+            <span>Conduz a <strong>Prancheta Oficial (#1)</strong> com as regras do estúdio, fornece o código verificador da etapa e assina o Handoff.</span>
+          </div>
+          <div class="role-card role-qa">
+            <strong><span class="chip chip-component">[QA]</span> QA Hunter (Auditor)</strong>
+            <span>Testa a interface e o código de outros Squads com o <strong>Passaporte de QA (#2)</strong> para encontrar falhas antes da entrega.</span>
+          </div>
+        </div>
+
+        <div class="entries">
+          <a class="entry entry-primary" href="quest/index.html">
+            <span class="entry-icon"><svg class="ic ic-24" aria-hidden="true"><use href="#i-key"/></svg></span>
+            <span class="entry-text">
+              <span class="entry-step">ABRIR BANCADA DO SQUAD</span>
+              <strong>Iniciar as 8 Fechaduras + Desafio Final</strong>
+              <span>Bancada visual de UI/UX integrada ao editor de JavaScript com testes em tempo real e código para o Placar.</span>
+            </span>
+            <svg class="ic ic-24" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="preview-panel" aria-label="Como funciona cada etapa">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <strong>Como cada Fechadura funciona</strong>
+          <span class="chip chip-ok">3 Chaves por Etapa</span>
+        </div>
+
+        <div class="preview-grid">
+          <div class="pv-card is-broken">
+            <span class="chip chip-bad" style="align-self:flex-start;">Antes (Quebrado)</span>
+            <span class="pv-title" style="font-size:15px; font-weight:400; color:#5c6474;">Card sem hierarquia (15px)</span>
+            <span class="pv-meta">Espaços aleatórios (13px, 5px) e botão sem contraste</span>
+            <div class="pv-code">font-size: 15px;
+padding: 13px 5px;
+/* Sem escala nem estado */</div>
+          </div>
+
+          <span style="font-weight:800; color:var(--ac-select);">&rarr;</span>
+
+          <div class="pv-card">
+            <span class="chip chip-js" style="align-self:flex-start;">Depois (UI + JS)</span>
+            <span class="pv-title">Componente Vivo</span>
+            <span class="pv-meta">Tokens UI + Algoritmo JS validado</span>
+            <div class="pv-code">if (vagas &lt;= 0) {
+  btn.disabled = true;
+  rotulo = "Encerradas";
+}</div>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div>
+            <strong>3. Chave do Conselheiro:</strong>
+            Para abrir o cofre de cada missão, combine o Token de UI + o Token dos testes de JS + o <strong>Código Verificador da Prancheta (#1)</strong>.
+          </div>
+        </div>
+
+        <div class="callout callout-warn">
+          <div>
+            <strong>Revezamento no Squad:</strong>
+            A cada fechadura aberta, alternem quem opera o teclado e o mouse entre UI/UX e Dev JS. Na Missão 7, o QA Hunter audita dois Squads vizinhos.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="print-cards" aria-label="Materiais de apoio e placar">
+      <article class="print-card">
+        <div>
+          <span class="chip chip-po">Material de Apoio &middot; Folha #1</span>
+          <h3>Prancheta do Conselheiro &amp; PO</h3>
+          <p>Regras de referência dos 3 Atos (Escala, Peso Visual, Ritmo 8px, WCAG, Jakob, Wireframe, 10 Heurísticas de Nielsen, Auto Layout, Cola JS), os 8 Códigos Verificadores e a tabela de Handoff.</p>
+        </div>
+        <a class="btn btn-secondary" href="impressos/prancheta-conselheiro.html">
+          <svg class="ic ic-16" aria-hidden="true"><use href="#i-printer"/></svg>
+          Abrir e Imprimir Folha #1
+        </a>
+      </article>
+
+      <article class="print-card">
+        <div>
+          <span class="chip chip-component">Auditoria em Sala &middot; Folha #2</span>
+          <h3>Passaporte do QA Hunter</h3>
+          <p>Roteiro de inspeção cruzada com 5 verificações de usabilidade e lógica JavaScript para auditar outros 2 Squads durante a rodada de testes.</p>
+        </div>
+        <a class="btn btn-secondary" href="impressos/passaporte-qa.html">
+          <svg class="ic ic-16" aria-hidden="true"><use href="#i-clipboard"/></svg>
+          Abrir e Imprimir Folha #2
+        </a>
+      </article>
+
+      <article class="print-card">
+        <div>
+          <span class="chip chip-select">Painel do Professor</span>
+          <h3>Placar Ao Vivo &amp; Gabarito</h3>
+          <p>Valide os códigos <code>SNC1.</code> enviados pelos Squads, acompanhe o ranking em tempo real, exporte a planilha da turma e consulte o gabarito das 8 missões.</p>
+        </div>
+        <a class="btn btn-primary" href="placar/index.html">
+          <svg class="ic ic-16" aria-hidden="true"><use href="#i-shield-check"/></svg>
+          Abrir Placar &amp; Guia
+        </a>
+      </article>
+    </section>
+  </main>
+
+  <footer class="portal-footer">
+    <span>Estúdio Oito &middot; Desafio Integrado de UI/UX e JavaScript</span>
+    <div>
+      <a href="impressos/prancheta-conselheiro.html">Folha A4 Conselheiro</a> &middot;
+      <a href="impressos/passaporte-qa.html">Folha A4 QA Hunter</a> &middot;
+      <a href="placar/index.html">Placar do Professor</a>
+    </div>
+  </footer>
+</body>
+</html>

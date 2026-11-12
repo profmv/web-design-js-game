@@ -1,0 +1,370 @@
+/*
+ * autor: Prof. Marcos V. Moraes
+ * proposito: Estilos do workspace de missoes simbioticas (quest/index.html) com Bancada UI + Terminal JS
+ * criado: 2026-11-12T16:22:00-03:00
+ * atualizado: 2026-11-12T16:22:00-03:00
+ * versao: 1.0.0
+ */
+
+body {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ws-shell {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 256px minmax(0, 1fr) 336px;
+  min-height: 0;
+}
+
+.ws-toolbar {
+  flex-wrap: nowrap;
+}
+
+.ws-toolbar .ws-tool-btn {
+  white-space: nowrap;
+}
+
+#toolbar-squad {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#toolbar-piloto {
+  max-width: 340px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.panel-left,
+.panel-right {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.canvas-area {
+  overflow-y: auto;
+  padding: var(--s-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.canvas-inner {
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+/* Trail list */
+.trail {
+  list-style: none;
+  margin: 0;
+  padding: var(--s-1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-05);
+}
+
+.trail-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: var(--s-1) var(--s-2);
+  border: 1px solid transparent;
+  border-radius: var(--r-8);
+  background: transparent;
+  color: var(--tx-1);
+  font: inherit;
+  font-size: var(--fs-14);
+  text-align: left;
+  cursor: pointer;
+}
+
+.trail-btn:hover:not(:disabled) {
+  background: var(--ws-panel-alt);
+}
+
+.trail-btn.is-current {
+  background: var(--ac-select-soft);
+  border-color: #c4d3f7;
+  font-weight: 700;
+}
+
+.trail-btn.is-done .trail-status {
+  color: var(--ok);
+}
+
+.trail-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.trail-sub {
+  display: block;
+  font-size: var(--fs-12);
+  color: var(--tx-3);
+  font-weight: 400;
+}
+
+/* Squad list & backpack */
+.backpack {
+  list-style: none;
+  margin: 0;
+  padding: var(--s-1) var(--s-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  font-size: var(--fs-12);
+}
+
+.backpack li {
+  padding: var(--s-1);
+  border-radius: var(--r-4);
+  background: var(--ws-panel-alt);
+  border: 1px solid var(--ws-border);
+}
+
+.backpack code {
+  font-family: var(--ff-mono);
+  font-weight: 700;
+  color: var(--ac-select-press);
+}
+
+/* Mission Header Card */
+.mission-head {
+  background: var(--ws-panel);
+  border: 1px solid var(--ws-border);
+  border-radius: var(--r-12);
+  padding: var(--s-3);
+  box-shadow: var(--el-1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.mission-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+  align-items: center;
+}
+
+.mission-head h1 {
+  margin: 0;
+  font-size: var(--fs-24);
+  line-height: 1.25;
+}
+
+.mission-brief {
+  margin: 0;
+  color: var(--tx-2);
+  font-size: var(--fs-16);
+}
+
+/* Dual Workbench Grid */
+.workbench-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-3);
+  align-items: start;
+}
+
+.bench-card {
+  background: var(--ws-panel);
+  border: 1px solid var(--ws-border);
+  border-radius: var(--r-12);
+  box-shadow: var(--el-1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.bench-card-ui {
+  border-top: 4px solid var(--ac-select);
+}
+
+.bench-card-js {
+  border-top: 4px solid var(--ac-js);
+}
+
+.bench-head {
+  padding: var(--s-2);
+  background: var(--ws-panel-alt);
+  border-bottom: 1px solid var(--ws-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+}
+
+.bench-head h2 {
+  margin: 0;
+  font-size: var(--fs-16);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+}
+
+.bench-body {
+  padding: var(--s-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+/* Simulated Preview Frame */
+.sim-frame {
+  padding: var(--s-3);
+  border-radius: var(--r-8);
+  border: 1px dashed var(--ws-border-strong);
+  background: var(--ws-canvas);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.live-event-card {
+  width: 100%;
+  max-width: 328px;
+  background: #ffffff;
+  border: 1px solid var(--ws-border);
+  border-radius: var(--r-12);
+  box-shadow: var(--el-2);
+  transition: all var(--t-med) var(--ease);
+}
+
+/* Code Editor Box */
+.code-editor-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.code-editor {
+  width: 100%;
+  min-height: 190px;
+  padding: var(--s-2);
+  border-radius: var(--r-8);
+  border: 1px solid #2a303b;
+  background: #14171f;
+  color: #e6edf3;
+  font-family: var(--ff-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+  tab-size: 2;
+}
+
+.code-editor:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #14171f, 0 0 0 4px var(--ac-js);
+}
+
+.console-output {
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-8);
+  background: #1c2028;
+  color: #aeb6c4;
+  font-family: var(--ff-mono);
+  font-size: 12px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-1);
+}
+
+.token-pill {
+  padding: 4px 10px;
+  border-radius: var(--r-4);
+  font-family: var(--ff-mono);
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--ok-soft);
+  color: var(--ok);
+  border: 1px solid #bfe3c7;
+}
+
+/* Lock Answer Box in Right Panel */
+.lock-triad {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.triad-step {
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-8);
+  border: 1px solid var(--ws-border);
+  background: var(--ws-panel-alt);
+  font-size: var(--fs-12);
+}
+
+.triad-step strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--tx-1);
+}
+
+/* Audit item row */
+.audit-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-1);
+  padding: var(--s-1);
+  border: 1px solid var(--ws-border);
+  border-radius: var(--r-8);
+  background: var(--ws-panel-alt);
+  font-size: var(--fs-12);
+}
+
+.audit-item select {
+  width: auto;
+  min-width: 145px;
+  min-height: 32px;
+  padding: 2px 8px;
+  font-size: var(--fs-12);
+}
+
+@media (max-width: 1420px) {
+  .workbench-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1120px) {
+  .ws-shell {
+    grid-template-columns: 220px minmax(0, 1fr) 300px;
+  }
+}
+
+@media (max-width: 860px) {
+  body {
+    height: auto;
+    overflow: auto;
+  }
+  .ws-toolbar {
+    height: auto;
+    min-height: var(--toolbar-h);
+    flex-wrap: wrap;
+    padding: var(--s-1) var(--s-2);
+  }
+  .ws-shell {
+    grid-template-columns: 1fr;
+  }
+}

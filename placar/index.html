@@ -1,0 +1,262 @@
+<!--
+autor: Prof. Marcos V. Moraes
+proposito: Placar ao vivo do professor, roteiro de dinamica de 3h15min+ (4 Atos) e gabarito das 8 Missoes da Operacao Estudio Oito
+criado: 2026-11-12T16:26:00-03:00
+atualizado: 2026-11-12T17:30:00-03:00
+versao: 2.0.0
+-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Placar &amp; Guia do Professor — Operação Estúdio Oito</title>
+  <link rel="stylesheet" href="../assets/css/tokens.css">
+  <style>
+    .placar-main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--s-4) var(--s-3);
+      display: flex;
+      flex-direction: column;
+      gap: var(--s-3);
+    }
+    .placar-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: var(--s-3);
+      align-items: start;
+    }
+    .card-box {
+      background: var(--ws-panel);
+      border: 1px solid var(--ws-border);
+      border-radius: var(--r-12);
+      padding: var(--s-3);
+      box-shadow: var(--el-1);
+    }
+    .card-box h2 {
+      margin: 0 0 var(--s-2);
+      font-size: var(--fs-20);
+    }
+    .rank-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--fs-14);
+    }
+    .rank-table th,
+    .rank-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--ws-border);
+      text-align: left;
+    }
+    .rank-table th {
+      font-size: var(--fs-12);
+      text-transform: uppercase;
+      color: var(--tx-2);
+      background: var(--ws-panel-alt);
+    }
+    .dot {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      margin-right: 4px;
+      background: var(--ws-border-strong);
+    }
+    .dot-ok {
+      background: var(--ok);
+    }
+    @media (max-width: 960px) {
+      .placar-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="ws-toolbar no-print">
+    <a class="ws-brand" href="../index.html">
+      <span class="ws-brand-mark" aria-hidden="true">8</span>
+      <span>Voltar ao Portal</span>
+    </a>
+    <span class="ws-toolbar-sep" aria-hidden="true"></span>
+    <span style="font-size:14px; color:#aeb6c4;">Placar Ao Vivo dos Squads &amp; Roteiro Docente</span>
+    <span class="ws-toolbar-spacer"></span>
+    <a class="ws-tool-btn" href="../impressos/prancheta-conselheiro.html" target="_blank">Imprimir Folha #1 (Conselheiro)</a>
+    <a class="ws-tool-btn" href="../impressos/passaporte-qa.html" target="_blank">Imprimir Folha #2 (QA Hunter)</a>
+  </header>
+
+  <main class="placar-main">
+    <div class="placar-grid">
+      <section class="card-box" aria-labelledby="titulo-ranking">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+          <h2 id="titulo-ranking" style="margin:0;">Ranking Ao Vivo dos Squads (UI/UX + JS)</h2>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-exportar-csv">Exportar CSV (Excel)</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-limpar-placar">Limpar Placar</button>
+          </div>
+        </div>
+
+        <table class="rank-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Squad &amp; Integrantes</th>
+              <th>Fechaduras</th>
+              <th>Pontos</th>
+              <th>Tempo</th>
+              <th>Erros / Dicas</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-ranking">
+            <tr>
+              <td colspan="7" style="color:var(--tx-3); text-align:center; padding:24px;">
+                Nenhum código adicionado ainda. Cole os códigos <code>SNC1.</code> gerados pelos Squads na caixa ao lado.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <aside class="card-box">
+        <h2>Adicionar Códigos dos Squads</h2>
+        <p style="margin:0 0 8px; font-size:13px; color:var(--tx-2);">
+          Cole um ou vários códigos <code>SNC1...</code> gerados pelos computadores da sala:
+        </p>
+        <textarea class="field field-mono" id="input-codigos" rows="4" placeholder="SNC1.eyJ..."></textarea>
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <button type="button" class="btn btn-primary" id="btn-processar-codigos" style="width:100%;">
+            Validar &amp; Atualizar Ranking
+          </button>
+        </div>
+        <p id="msg-placar" style="margin:8px 0 0; font-size:12px; color:var(--tx-2);" role="status"></p>
+      </aside>
+    </div>
+
+    <div class="placar-grid">
+      <section class="card-box">
+        <h2>Roteiro da Dinâmica em Sala (Jornada 3h15min a 3h30min &middot; 4 Atos)</h2>
+        <table class="rank-table">
+          <thead>
+            <tr>
+              <th style="width:18%;">Tempo</th>
+              <th style="width:28%;">Etapa / Ato</th>
+              <th>Como conduzir na sala</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>00:00 - 00:15</strong><br><span style="font-size:11px; color:var(--tx-2);">(15 min)</span></td>
+              <td><strong>Briefing &amp; Formação dos Squads</strong></td>
+              <td>
+                Em cada computador sente <strong>1 aluno de UI/Figma + 1 aluno de Web/JS</strong>. Os alunos sem PC assumem os postos de <strong>PO/Conselheiro (Folha A4 #1)</strong> e <strong>QA Hunter (Folha A4 #2)</strong>. Explique que as 8 fechaduras só abrem combinando os códigos da Prancheta A4 com os tokens da tela.
+              </td>
+            </tr>
+            <tr>
+              <td><strong>00:15 - 01:15</strong><br><span style="font-size:11px; color:var(--tx-2);">(60 min)</span></td>
+              <td><strong>Ato I — Fundações (Missões 1, 2 e 3)</strong></td>
+              <td>
+                <strong>M1:</strong> Escala modular 1.25 + função JS de múltiplos de 4. <strong>M2 (troca piloto):</strong> Hierarquia de Peso Visual (7 itens) + <code>.sort()</code> JS. <strong>M3:</strong> Ritmo 8px (8/16/24/48) + cálculo cumulativo de coordenadas Y.
+              </td>
+            </tr>
+            <tr>
+              <td><strong>01:15 - 02:15</strong><br><span style="font-size:11px; color:var(--tx-2);">(60 min)</span></td>
+              <td><strong>Ato II — Interação &amp; Padrões (Missões 4, 5 e 6)</strong></td>
+              <td>
+                <strong>M4:</strong> 5 Estados WCAG (4.5:1 / 3:1 / Disabled B) + máquina de estados JS. <strong>M5:</strong> Auditoria da Lei de Jakob &amp; Dark Patterns (8 marcadores) + <code>.filter()</code> seguro. <strong>M6:</strong> Esqueleto Wireframe Low-Fi + pipeline <code>.filter().map()</code>.
+              </td>
+            </tr>
+            <tr>
+              <td><strong>02:15 - 02:55</strong><br><span style="font-size:11px; color:var(--tx-2);">(40 min)</span></td>
+              <td><strong>Ato III — Usabilidade &amp; Figma (M7 e M8) + Rodada QA</strong></td>
+              <td>
+                Enquanto a dupla no PC julga as <strong>10 Heurísticas de Nielsen (M7)</strong> e monta o <strong>Auto Layout 328x296-N11 (M8)</strong>, os <strong>QA Hunters circulam com a Folha A4 #2</strong> auditando 2 Squads vizinhos e assinando o visto cruzado!
+              </td>
+            </tr>
+            <tr>
+              <td><strong>02:55 - 03:30</strong><br><span style="font-size:11px; color:var(--tx-2);">(35-45 min)</span></td>
+              <td><strong>Ato IV — Oficina Capstone &amp; Pitch Final</strong></td>
+              <td>
+                Com as 8/8 fechaduras abertas, cada Squad constrói no Figma (ou verso da Folha #1) o Frame <code>360x800</code> com componente <code>Card/Evento</code>, valida o código <code>SNC1.</code> no Placar do telão e apresenta um <strong>Pitch de 2 minutos</strong> (UI + JS + QA).
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card-box">
+        <h2>Gabarito Rápido do Professor (8 Missões)</h2>
+        <p style="margin:0 0 10px; font-size:13px; color:var(--tx-2);">
+          Não clique enquanto estiver projetando a tela para os alunos! Use apenas no seu monitor ou celular se precisar destravar algum grupo.
+        </p>
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-toggle-gabarito">Mostrar / Ocultar Gabarito</button>
+        <div id="caixa-gabarito" hidden style="margin-top:12px; font-size:12px;">
+          <table class="rank-table">
+            <thead>
+              <tr>
+                <th>Missão</th>
+                <th>1. Token UI</th>
+                <th>2. Token JS</th>
+                <th>3. Folha A4</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>M1</strong></td>
+                <td><code>UI1-32-20-40</code></td>
+                <td><code>JS1-SCALE-OK</code></td>
+                <td><code>PO-MOD4</code></td>
+              </tr>
+              <tr>
+                <td><strong>M2</strong></td>
+                <td><code>UI2-BCGEFDA</code></td>
+                <td><code>JS2-SORT-OK</code></td>
+                <td><code>PO-PESO7</code></td>
+              </tr>
+              <tr>
+                <td><strong>M3</strong></td>
+                <td><code>UI3-72-112-184-256</code></td>
+                <td><code>JS3-BOX-OK</code></td>
+                <td><code>PO-RITMO8</code></td>
+              </tr>
+              <tr>
+                <td><strong>M4</strong></td>
+                <td><code>UI4-600-700-800-500-B</code></td>
+                <td><code>JS4-STATE-OK</code></td>
+                <td><code>PO-WCAG45</code></td>
+              </tr>
+              <tr>
+                <td><strong>M5</strong></td>
+                <td><code>UI5-01201222</code></td>
+                <td><code>JS5-FILTER-OK</code></td>
+                <td><code>PO-JAKOB8</code></td>
+              </tr>
+              <tr>
+                <td><strong>M6</strong></td>
+                <td><code>UI6-AB-BU-CH-BA-IL-IL-CA-FB-TA</code></td>
+                <td><code>JS6-WIRE-OK</code></td>
+                <td><code>PO-WIRE9</code></td>
+              </tr>
+              <tr>
+                <td><strong>M7</strong></td>
+                <td><code>UI7-1-5-9-6-4-3-2</code></td>
+                <td><code>JS7-NIELSEN-OK</code></td>
+                <td><code>PO-NIELSEN10</code></td>
+              </tr>
+              <tr>
+                <td><strong>M8</strong></td>
+                <td><code>UI8-328x296-N11</code></td>
+                <td><code>JS8-AUTOLAYOUT-OK</code></td>
+                <td><code>PO-FIG328</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="placar.js"></script>
+</body>
+</html>

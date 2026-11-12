@@ -1,0 +1,326 @@
+/*
+ * autor: Prof. Marcos V. Moraes
+ * proposito: Estilos do portal principal (index.html) da Operacao Estudio Oito
+ * criado: 2026-11-12T16:19:00-03:00
+ * atualizado: 2026-11-12T16:19:00-03:00
+ * versao: 1.0.0
+ */
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.toolbar-file {
+  font-size: var(--fs-14);
+  color: var(--ws-toolbar-muted);
+}
+
+.portal-canvas {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-3) var(--s-5);
+}
+
+.portal-canvas > * {
+  width: 100%;
+  max-width: 1240px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.frame-name {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  font-family: var(--ff-mono);
+  font-size: var(--fs-12);
+  font-weight: 700;
+  color: var(--tx-2);
+}
+
+.portal-frame {
+  display: grid;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+  gap: var(--s-4);
+  padding: var(--s-4);
+  border: 1px solid var(--ws-border);
+  border-radius: var(--r-12);
+  background: var(--ws-panel);
+  box-shadow: var(--el-2);
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  font-size: var(--fs-12);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ac-select-press);
+}
+
+.intro h1 {
+  margin: 0;
+  font-size: var(--fs-32);
+  line-height: 40px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.lead {
+  margin: 0;
+  font-size: var(--fs-16);
+  color: var(--tx-2);
+}
+
+.squad-roles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-1);
+  margin-top: var(--s-1);
+}
+
+.role-card {
+  padding: var(--s-2);
+  border-radius: var(--r-8);
+  border: 1px solid var(--ws-border);
+  background: var(--ws-panel-alt);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-05);
+}
+
+.role-card > strong {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+  font-size: var(--fs-14);
+}
+
+.role-card span {
+  font-size: var(--fs-12);
+  color: var(--tx-2);
+}
+
+.role-ui { border-left: 4px solid var(--ac-select); }
+.role-js { border-left: 4px solid var(--ac-js); }
+.role-po { border-left: 4px solid var(--ac-po); }
+.role-qa { border-left: 4px solid var(--ac-component); }
+
+.entries {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s-1);
+  margin-top: var(--s-1);
+}
+
+.entry {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2);
+  border: 1px solid var(--ws-border);
+  border-radius: var(--r-8);
+  background: var(--ws-panel);
+  color: var(--tx-1);
+  text-decoration: none;
+  transition: transform var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+}
+
+a.entry:hover {
+  border-color: var(--ac-select);
+  box-shadow: var(--el-1);
+  transform: translateY(-1px);
+}
+
+.entry-primary {
+  border-color: var(--ac-select);
+  background: var(--ac-select-soft);
+}
+
+.entry-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r-8);
+  background: var(--ws-panel);
+  border: 1px solid var(--ws-border);
+  color: var(--ac-select-press);
+  flex: none;
+}
+
+.entry-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  font-size: var(--fs-14);
+  color: var(--tx-2);
+}
+
+.entry-text strong {
+  font-size: var(--fs-20);
+  color: var(--tx-1);
+}
+
+.entry-step {
+  font-family: var(--ff-mono);
+  font-size: var(--fs-12);
+  font-weight: 700;
+  color: var(--ac-select-press);
+}
+
+.preview-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  border-radius: var(--r-8);
+  border: 1px solid var(--ws-border);
+  background: var(--ws-panel-alt);
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.pv-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: var(--s-2);
+  border: 1px solid var(--ws-border);
+  border-radius: var(--r-12);
+  background: var(--ws-panel);
+  box-shadow: var(--el-1);
+}
+
+.pv-card.is-broken {
+  padding: 10px 13px 15px 8px;
+  border-radius: 3px;
+  border-color: var(--bad);
+  box-shadow: none;
+  transform: rotate(-0.8deg);
+}
+
+.pv-tag {
+  font-size: var(--fs-12);
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--ac-select-press);
+}
+
+.pv-title {
+  margin-top: var(--s-05);
+  font-size: var(--fs-20);
+  font-weight: 800;
+}
+
+.pv-meta {
+  margin-top: var(--s-1);
+  font-size: var(--fs-12);
+  color: var(--tx-2);
+}
+
+.pv-code {
+  margin-top: var(--s-1);
+  padding: var(--s-1);
+  border-radius: var(--r-4);
+  background: #1c2028;
+  color: #f2f4f7;
+  font-family: var(--ff-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  word-break: break-word;
+}
+
+.print-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-2);
+}
+
+.print-card {
+  padding: var(--s-3);
+  border: 1px solid var(--ws-border);
+  border-radius: var(--r-8);
+  background: var(--ws-panel);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.print-card h3 {
+  margin: var(--s-05) 0;
+  font-size: var(--fs-20);
+}
+
+.print-card p {
+  margin: 0;
+  font-size: var(--fs-14);
+  color: var(--tx-2);
+}
+
+.portal-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  border-top: 1px solid var(--ws-border);
+  background: var(--ws-panel);
+  font-size: var(--fs-12);
+  color: var(--tx-3);
+}
+
+@media (max-width: 1024px) {
+  .portal-frame {
+    grid-template-columns: 1fr;
+    padding: var(--s-2);
+  }
+  .print-cards {
+    grid-template-columns: 1fr;
+  }
+  .squad-roles {
+    grid-template-columns: 1fr;
+  }
+  .preview-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .ws-toolbar {
+    height: auto;
+    min-height: var(--toolbar-h);
+    flex-wrap: wrap;
+    padding: var(--s-1) var(--s-2);
+  }
+  .toolbar-file,
+  .ws-toolbar-sep,
+  .ws-toolbar-spacer {
+    display: none;
+  }
+  .portal-canvas {
+    padding: var(--s-2);
+  }
+}

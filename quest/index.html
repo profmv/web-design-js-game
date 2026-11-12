@@ -1,0 +1,158 @@
+<!--
+autor: Prof. Marcos V. Moraes
+proposito: Interface interativa das 8 Fechaduras Simbioticas + Oficina Capstone (Bancada UI/UX + Terminal JavaScript + Validacao do Conselheiro)
+criado: 2026-11-12T16:22:00-03:00
+atualizado: 2026-11-12T17:30:00-03:00
+versao: 2.0.0
+-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estúdio Oito — Bancada Simbiótica (UI/UX + JavaScript)</title>
+  <link rel="stylesheet" href="../assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/quest.css">
+</head>
+<body>
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+    <symbol id="i-unlock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.8-1.2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></symbol>
+    <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M10 2h4"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 4a3 3 0 0 1 0 6M21 20a6 6 0 0 0-4-5.6"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><path d="M7 8l-4 4l4 4"/><path d="M17 8l4 4l-4 4"/><path d="M14 4l-4 16"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
+    <symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2M7 14h10v7H7z"/></symbol>
+    <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="M8.5 14L7 22l5-3 5 3-1.5-8"/></symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z"/></symbol>
+  </svg>
+
+  <header class="ws-toolbar" role="banner">
+    <a class="ws-brand" href="../index.html">
+      <span class="ws-brand-mark" aria-hidden="true">8</span>
+      <span>Estúdio Oito</span>
+    </a>
+    <span class="ws-toolbar-sep" aria-hidden="true"></span>
+    <span id="toolbar-squad" style="font-size:13px; color:#aeb6c4;">Squad não identificado</span>
+    <span class="ws-toolbar-spacer"></span>
+    <span class="chip chip-select" id="toolbar-piloto">Piloto: UI + JS</span>
+    <span style="display:inline-flex; align-items:center; gap:6px; font-family:var(--ff-mono); font-size:13px; white-space:nowrap;">
+      <svg class="ic ic-16" aria-hidden="true"><use href="#i-timer"/></svg>
+      <span id="toolbar-tempo">00:00</span>
+    </span>
+    <a class="ws-tool-btn" href="../impressos/prancheta-conselheiro.html" target="_blank">
+      <svg class="ic ic-16" aria-hidden="true"><use href="#i-printer"/></svg>
+      <span>Prancheta #1</span>
+    </a>
+    <button type="button" class="ws-tool-btn is-active" id="btn-codigo-placar">
+      <svg class="ic ic-16" aria-hidden="true"><use href="#i-award"/></svg>
+      <span>Código Placar</span>
+    </button>
+  </header>
+
+  <div class="ws-shell">
+    <!-- PAINEL ESQUERDO: TRILHA E MOCHILA DE TOKENS -->
+    <aside class="ws-panel panel-left" aria-label="Trilha de Missões e Mochila do Squad">
+      <div class="ws-panel-head">
+        <span>Fechaduras Simbióticas</span>
+        <span class="chip" id="trilha-progresso">0/8</span>
+      </div>
+      <ol class="trail" id="lista-trilha"></ol>
+
+      <div class="ws-panel-head">
+        <span>Integrantes do Squad</span>
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-editar-squad" style="min-height:24px; padding:0 6px;">Editar</button>
+      </div>
+      <div class="ws-section" id="resumo-squad" style="font-size:12px; color:var(--tx-2);"></div>
+
+      <div class="ws-panel-head">
+        <span>Mochila de Tokens (UI + JS)</span>
+      </div>
+      <ul class="backpack" id="lista-mochila">
+        <li style="color:var(--tx-3);">Os tokens conquistados nas fechaduras aparecem aqui.</li>
+      </ul>
+    </aside>
+
+    <!-- CANVAS CENTRAL: BANCADA DUPLA (UI/UX + JAVASCRIPT) -->
+    <main class="canvas-area ws-canvas-bg" id="area-canvas">
+      <div class="canvas-inner" id="canvas-conteudo"></div>
+    </main>
+
+    <!-- PAINEL DIREITO: COFRE SIMBIOTICO (DESTRAVAR FECHADURA) E DICAS -->
+    <aside class="ws-panel panel-right" aria-label="Cofre da Fechadura e Dicas">
+      <div class="ws-panel-head">
+        <span>Cofre da Fechadura</span>
+        <span class="chip chip-select" id="cofre-badge">Etapa 1</span>
+      </div>
+
+      <section class="ws-section" id="secao-cofre">
+        <div class="lock-triad">
+          <div class="triad-step" style="border-left:3px solid var(--ac-select);">
+            <strong>1. Token UI/UX (Arquiteto de Interface)</strong>
+            <span id="status-token-ui">Ajuste a Bancada de UI à esquerda para gerar o token.</span>
+          </div>
+          <div class="triad-step" style="border-left:3px solid var(--ac-js);">
+            <strong>2. Token JavaScript (Engenheiro Web)</strong>
+            <span id="status-token-js">Programe e clique em "Rodar Testes JS" para gerar o token.</span>
+          </div>
+          <div class="triad-step" style="border-left:3px solid var(--ac-po);">
+            <strong>3. Código do Conselheiro (Prancheta #1)</strong>
+            <span>Consulte a coluna "Cod. Papel" na Prancheta do Conselheiro.</span>
+          </div>
+        </div>
+
+        <form id="form-fechadura" style="margin-top:16px; display:flex; flex-direction:column; gap:10px;" autocomplete="off">
+          <div>
+            <label class="ws-label" for="input-token-ui">1. Token UI/UX gerado:</label>
+            <input class="field field-mono" id="input-token-ui" placeholder="Ex.: UI1-..." required>
+          </div>
+          <div>
+            <label class="ws-label" for="input-token-js">2. Token JS gerado nos testes:</label>
+            <input class="field field-mono" id="input-token-js" placeholder="Ex.: JS1-..." required>
+          </div>
+          <div>
+            <label class="ws-label" for="input-token-po">3. Código do Conselheiro (Prancheta):</label>
+            <input class="field field-mono" id="input-token-po" placeholder="Ex.: PO-..." required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg" id="btn-destravar">
+            <svg class="ic ic-16" aria-hidden="true"><use href="#i-unlock"/></svg>
+            Destravar Fechadura
+          </button>
+        </form>
+
+        <div id="feedback-fechadura" style="margin-top:12px;" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="ws-section" id="secao-dica">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <strong style="font-size:13px; display:flex; align-items:center; gap:6px;">
+            <svg class="ic ic-16" aria-hidden="true"><use href="#i-bulb"/></svg>
+            Dica para o Squad
+          </strong>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-pedir-dica">Revelar Dica (-10 pts)</button>
+        </div>
+        <div id="caixa-dica-texto" style="font-size:13px; color:var(--tx-2);">
+          Precisa de ajuda? Consulte primeiro a Prancheta do Conselheiro. Se ainda tiver dúvida, revele a dica técnica.
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <!-- MODAL DE CADASTRO DO SQUAD E CODIGO DO PLACAR -->
+  <dialog id="modal-placar" style="border:1px solid var(--ws-border); border-radius:12px; padding:24px; max-width:540px; width:92%; box-shadow:var(--el-3);">
+    <h2 style="margin:0 0 8px;">Código Oficial do Squad para o Placar</h2>
+    <p style="margin:0 0 12px; font-size:14px; color:var(--tx-2);">
+      Copie o código abaixo e envie para o professor projetar no Placar da turma, ou anote na Folha A4 #1.
+    </p>
+    <textarea class="field field-mono" id="texto-codigo-placar" rows="4" readonly style="margin-bottom:12px;"></textarea>
+    <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end;">
+      <button type="button" class="btn btn-secondary" id="btn-copiar-placar">Copiar Código</button>
+      <button type="button" class="btn btn-danger" id="btn-resetar-progresso">Reiniciar Jogo</button>
+      <button type="button" class="btn btn-primary" id="btn-fechar-modal">Fechar</button>
+    </div>
+  </dialog>
+
+  <script type="module" src="assets/js/app.js"></script>
+</body>
+</html>
